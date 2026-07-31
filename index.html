@@ -1,44 +1,336 @@
--- 1. جدول ملفات المستخدمين والمراحل
-create table if not exists profiles (
-  id uuid primary key default gen_random_uuid(),
-  user_id uuid references auth.users on delete cascade not null unique,
-  first_name text not null,
-  email text not null,
-  country text,
-  city text,
-  current_phase text not null,
-  goal text not null,
-  duration_months int default 3,
-  created_at timestamp with time zone default timezone('utc'::text, now()) not null
-);
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MyPhase – No one should go through a life phase alone</title>
+    <meta name="theme-color" content="#0f172a">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Supabase Client JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
--- 2. جدول التحديثات اليومية والمزاج
-create table if not exists daily_updates (
-  id uuid primary key default gen_random_uuid(),
-  user_id uuid references auth.users on delete cascade not null,
-  user_name text not null,
-  phase_name text not null,
-  mood text not null,
-  update_text text not null,
-  created_at timestamp with time zone default timezone('utc'::text, now()) not null
-);
+    <style>
+        :root {
+            --bg-main: #0f172a;
+            --bg-card: #1e293b;
+            --bg-card-hover: #334155;
+            --accent-primary: #6366f1;
+            --accent-glow: #818cf8;
+            --accent-success: #10b981;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --border: #334155;
+            --radius-lg: 16px;
+            --radius-md: 10px;
+        }
 
--- 3. جدول النقاشات والأسئلة
-create table if not exists discussions (
-  id uuid primary key default gen_random_uuid(),
-  user_id uuid references auth.users on delete cascade not null,
-  user_name text not null,
-  phase_name text not null,
-  title text not null,
-  content text not null,
-  created_at timestamp with time zone default timezone('utc'::text, now()) not null
-);
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
+        body { background-color: var(--bg-main); color: var(--text-main); min-height: 100vh; padding-bottom: 80px; }
 
--- تفعيل الحماية والوصول
-alter table profiles enable row level security;
-alter table daily_updates enable row level security;
-alter table discussions enable row level security;
+        header {
+            background-color: var(--bg-card); border-bottom: 1px solid var(--border);
+            padding: 16px 20px; display: flex; justify-content: space-between; align-items: center;
+            position: sticky; top: 0; z-index: 100;
+        }
 
-create policy "Allow access to profiles" on profiles for all using (true) with check (true);
-create policy "Allow access to daily_updates" on daily_updates for all using (true) with check (true);
-create policy "Allow access to discussions" on discussions for all using (true) with check (true);
+        .logo-box { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 1.2rem; color: var(--accent-glow); }
+        .phase-badge { background: rgba(99, 102, 241, 0.2); color: var(--accent-glow); padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; border: 1px solid var(--accent-primary); }
+
+        main { padding: 20px 15px; max-width: 600px; margin: 0 auto; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        .card { background-color: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 20px; margin-bottom: 20px; }
+        input, select, textarea, button {
+            width: 100%; padding: 12px 14px; border-radius: var(--radius-md);
+            border: 1px solid var(--border); background-color: var(--bg-main); color: var(--text-main); margin-bottom: 12px; font-size: 0.9rem;
+        }
+        button { background-color: var(--accent-primary); color: white; font-weight: 600; border: none; cursor: pointer; transition: 0.2s; }
+        button:active { transform: scale(0.98); }
+        .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text-muted); }
+
+        .mood-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-bottom: 12px; }
+        .mood-btn { background: var(--bg-main); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 8px 2px; text-align: center; cursor: pointer; font-size: 1.2rem; }
+        .mood-btn.selected { border-color: var(--accent-primary); background: rgba(99, 102, 241, 0.2); }
+
+        .feed-item { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 16px; margin-bottom: 12px; }
+        .feed-meta { display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 8px; }
+
+        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(15, 23, 42, 0.98); z-index: 2000; display: flex; align-items: center; justify-content: center; padding: 20px; }
+        .modal-box { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 24px; width: 100%; max-width: 450px; }
+
+        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background-color: var(--bg-card); border-top: 1px solid var(--border); display: flex; justify-content: space-around; padding: 10px 0; z-index: 1000; }
+        .nav-item { color: var(--text-muted); font-size: 0.7rem; background: none; border: none; width: auto; margin: 0; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+        .nav-item.active { color: var(--accent-glow); }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="logo-box"><i class="fa-solid fa-compass"></i> MyPhase</div>
+        <div class="phase-badge" id="headerPhaseBadge">Not Logged In</div>
+    </header>
+
+    <main>
+        <!-- TODAY TAB -->
+        <div id="tab-today" class="tab-content active">
+            <div class="card">
+                <h2 id="userGreeting" style="font-size: 1.1rem;">Welcome 👋</h2>
+                <p id="currentGoalText" style="font-size: 0.8rem; color: var(--text-muted);">Goal: Loading...</p>
+            </div>
+
+            <div class="card">
+                <div style="margin-bottom: 10px; font-weight: 600;"><i class="fa-solid fa-face-smile"></i> Daily Update</div>
+                <div class="mood-grid">
+                    <div class="mood-btn selected" onclick="selectMood('😊', this)">😊</div>
+                    <div class="mood-btn" onclick="selectMood('🙂', this)">🙂</div>
+                    <div class="mood-btn" onclick="selectMood('😐', this)">😐</div>
+                    <div class="mood-btn" onclick="selectMood('😔', this)">😔</div>
+                    <div class="mood-btn" onclick="selectMood('😣', this)">😣</div>
+                </div>
+                <textarea id="dailyUpdateInput" placeholder="Share one update with your phase community..."></textarea>
+                <button onclick="postDailyUpdate()"><i class="fa-solid fa-paper-plane"></i> Post Update</button>
+            </div>
+
+            <div style="font-weight: 600; margin-bottom: 10px;">Community Feed</div>
+            <div id="circleUpdatesStream">Loading updates...</div>
+        </div>
+
+        <!-- DISCUSSION TAB -->
+        <div id="tab-discussion" class="tab-content">
+            <div class="card">
+                <div style="margin-bottom: 10px; font-weight: 600;"><i class="fa-solid fa-comments"></i> Start Discussion</div>
+                <input type="text" id="discussionTitle" placeholder="Topic title...">
+                <textarea id="discussionContent" placeholder="Ask a question or share advice..."></textarea>
+                <button onclick="postDiscussion()"><i class="fa-solid fa-plus"></i> Post Discussion</button>
+            </div>
+            <div id="discussionFeed">Loading discussions...</div>
+        </div>
+
+        <!-- PROFILE TAB -->
+        <div id="tab-profile" class="tab-content">
+            <div class="card" style="text-align: center;">
+                <h3 id="profileName">User</h3>
+                <p id="profileLocation" style="font-size: 0.8rem; color: var(--text-muted); margin-top: 4px;">Location</p>
+            </div>
+            <button class="btn-outline" style="color: #ef4444; border-color: #ef4444;" onclick="logout()"><i class="fa-solid fa-right-from-bracket"></i> Logout</button>
+        </div>
+    </main>
+
+    <!-- Bottom Navigation -->
+    <nav class="bottom-nav">
+        <button class="nav-item active" onclick="switchTab('today', this)"><i class="fa-solid fa-sun"></i><span>Today</span></button>
+        <button class="nav-item" onclick="switchTab('discussion', this)"><i class="fa-solid fa-comments"></i><span>Discussion</span></button>
+        <button class="nav-item" onclick="switchTab('profile', this)"><i class="fa-solid fa-user"></i><span>Profile</span></button>
+    </nav>
+
+    <!-- AUTH & ONBOARDING MODAL -->
+    <div id="authModal" class="modal-overlay">
+        <div class="modal-box">
+            <h2 style="color: var(--accent-glow); margin-bottom: 6px;">Welcome to MyPhase</h2>
+            <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 16px;">Sign in or Create account to continue.</p>
+
+            <form id="authForm" onsubmit="handleAuth(event)">
+                <input type="email" id="authEmail" placeholder="Email" required>
+                <input type="password" id="authPassword" placeholder="Password (min 6 chars)" required minlength="6">
+                
+                <div id="additionalFields">
+                    <input type="text" id="obName" placeholder="First Name">
+                    <input type="text" id="obCountry" placeholder="Country">
+                    <input type="text" id="obCity" placeholder="City">
+                    <select id="obPhase">
+                        <option value="Learning Programming">🎓 Learning Programming</option>
+                        <option value="Learning English">📚 Learning English</option>
+                        <option value="Career Change">💼 Career Change</option>
+                        <option value="Starting Startup">🚀 Starting Startup</option>
+                        <option value="Health & Fitness">🏋️ Health & Fitness</option>
+                    </select>
+                    <input type="text" id="obGoal" placeholder="Your Goal (e.g. Learn Web Dev)">
+                </div>
+
+                <button type="submit" id="authBtn">Continue / Login</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // 🚨 بيانات الربط الخاصة بمشروعك تم إدراجها هنا تلقائياً
+        const SUPABASE_URL = "https://liovctvovsyyzcwfjhob.supabase.co";
+        const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxpb3ZjdHZvdnN5eXpjd2ZqaG9iIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU0NjYyMzQsImV4cCI6MjEwMTA0MjIzNH0.wK8klwR4K7m2TOF3Qmi1QqprLdLSZJt5T205LTRU8ws";
+        const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        let currentUser = null;
+        let userProfile = null;
+        let selectedMood = '😊';
+
+        async function initApp() {
+            const { data: { session } } = await db.auth.getSession();
+            if (session) {
+                currentUser = session.user;
+                await loadUserProfile();
+                document.getElementById('authModal').style.display = 'none';
+                loadFeeds();
+            } else {
+                document.getElementById('authModal').style.display = 'flex';
+            }
+        }
+
+        async function handleAuth(e) {
+            e.preventDefault();
+            const email = document.getElementById('authEmail').value;
+            const password = document.getElementById('authPassword').value;
+
+            // 1. محاولة تسجيل الدخول
+            let { data, error } = await db.auth.signInWithPassword({ email, password });
+
+            // 2. إذا لم يكن الحساب موجوداً، يتم إنشاؤه جديداً
+            if (error) {
+                const signUp = await db.auth.signUp({ email, password });
+                if (signUp.error) return alert("Error: " + signUp.error.message);
+                
+                currentUser = signUp.data.user;
+
+                if (currentUser) {
+                    await db.from('profiles').insert([{
+                        user_id: currentUser.id,
+                        first_name: document.getElementById('obName').value || 'User',
+                        email: email,
+                        country: document.getElementById('obCountry').value || 'Global',
+                        city: document.getElementById('obCity').value || 'City',
+                        current_phase: document.getElementById('obPhase').value,
+                        goal: document.getElementById('obGoal').value || 'Complete Phase'
+                    }]);
+                }
+            } else {
+                currentUser = data.user;
+            }
+
+            await loadUserProfile();
+            document.getElementById('authModal').style.display = 'none';
+            loadFeeds();
+        }
+
+        async function loadUserProfile() {
+            let { data } = await db.from('profiles').select('*').eq('user_id', currentUser.id).single();
+            if (data) {
+                userProfile = data;
+                document.getElementById('headerPhaseBadge').innerText = data.current_phase;
+                document.getElementById('userGreeting').innerText = `Welcome, ${data.first_name} 👋`;
+                document.getElementById('currentGoalText').innerText = `Goal: ${data.goal}`;
+                document.getElementById('profileName').innerText = data.first_name;
+                document.getElementById('profileLocation').innerText = `${data.city}, ${data.country}`;
+            }
+        }
+
+        function selectMood(m, btn) {
+            selectedMood = m;
+            document.querySelectorAll('.mood-btn').forEach(b => b.classList.remove('selected'));
+            btn.classList.add('selected');
+        }
+
+        async function postDailyUpdate() {
+            const input = document.getElementById('dailyUpdateInput');
+            if (!input.value.trim() || !userProfile) return;
+
+            await db.from('daily_updates').insert([{
+                user_id: currentUser.id,
+                user_name: userProfile.first_name,
+                phase_name: userProfile.current_phase,
+                mood: selectedMood,
+                update_text: input.value
+            }]);
+
+            input.value = '';
+            loadFeeds();
+        }
+
+        async function postDiscussion() {
+            const title = document.getElementById('discussionTitle').value;
+            const content = document.getElementById('discussionContent').value;
+            if (!title || !content || !userProfile) return;
+
+            await db.from('discussions').insert([{
+                user_id: currentUser.id,
+                user_name: userProfile.first_name,
+                phase_name: userProfile.current_phase,
+                title: title,
+                content: content
+            }]);
+
+            document.getElementById('discussionTitle').value = '';
+            document.getElementById('discussionContent').value = '';
+            loadDiscussions();
+        }
+
+        async function loadFeeds() {
+            if (!userProfile) return;
+            
+            let { data: updates } = await db.from('daily_updates')
+                .select('*')
+                .eq('phase_name', userProfile.current_phase)
+                .order('created_at', { ascending: false });
+
+            const container = document.getElementById('circleUpdatesStream');
+            container.innerHTML = '';
+            
+            if (updates && updates.length > 0) {
+                updates.forEach(up => {
+                    container.innerHTML += `
+                        <div class="feed-item">
+                            <div class="feed-meta">
+                                <strong>${up.user_name} • ${up.mood}</strong>
+                                <span>${new Date(up.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                            </div>
+                            <p style="font-size:0.9rem;">${up.update_text}</p>
+                        </div>
+                    `;
+                });
+            } else {
+                container.innerHTML = `<p style="font-size:0.8rem; color:var(--text-muted); text-align:center;">No updates in this phase yet. Be the first!</p>`;
+            }
+
+            loadDiscussions();
+        }
+
+        async function loadDiscussions() {
+            if (!userProfile) return;
+
+            let { data: discussions } = await db.from('discussions')
+                .select('*')
+                .eq('phase_name', userProfile.current_phase)
+                .order('created_at', { ascending: false });
+
+            const container = document.getElementById('discussionFeed');
+            container.innerHTML = '';
+
+            if (discussions && discussions.length > 0) {
+                discussions.forEach(d => {
+                    container.innerHTML += `
+                        <div class="feed-item">
+                            <div class="feed-meta"><strong>${d.user_name}</strong></div>
+                            <h4 style="font-size:0.95rem; margin-bottom:4px;">${d.title}</h4>
+                            <p style="font-size:0.85rem; color:var(--text-muted);">${d.content}</p>
+                        </div>
+                    `;
+                });
+            } else {
+                container.innerHTML = `<p style="font-size:0.8rem; color:var(--text-muted); text-align:center;">No discussions yet.</p>`;
+            }
+        }
+
+        function switchTab(tabId, btn) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            document.getElementById(`tab-${tabId}`).classList.add('active');
+            btn.classList.add('active');
+        }
+
+        async function logout() {
+            await db.auth.signOut();
+            location.reload();
+        }
+
+        initApp();
+    </script>
+</body>
+</html>
