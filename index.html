@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MyPhase – No one should go through a life phase alone</title>
+    
+    <!-- PWA Requirements -->
+    <meta name="theme-color" content="#0f172a">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Supabase Client JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <style>
+        :root {
+            --bg-main: #0f172a;
+            --bg-card: #1e293b;
+            --bg-card-hover: #334155;
+            --accent-primary: #6366f1;
+            --accent-glow: #818cf8;
+            --accent-success: #10b981;
+            --accent-warning: #f59e0b;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --border: #334155;
+            --radius-lg: 16px;
+            --radius-md: 10px;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
+
+        body {
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            padding-bottom: 80px;
+        }
+
+        header {
+            background-color: var(--bg-card);
+            border-bottom: 1px solid var(--border);
+            padding: 16px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo-box { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 1.2rem; color: var(--accent-glow); }
+        .phase-badge { background: rgba(99, 102, 241, 0.2); color: var(--accent-glow); padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; border: 1px solid var(--accent-primary); }
+
+        main { flex: 1; padding: 20px 15px; max-width: 650px; margin: 0 auto; width: 100%; }
+
+        .tab-content { display: none; }
+        .tab-content.active { display: block; animation: fadeIn 0.3s ease; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Card Styles */
+        .card {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+        .card-title { font-size: 1.05rem; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+
+        /* Form Components */
+        input, select, textarea, button {
+            width: 100%;
+            padding: 12px 14px;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border);
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            outline: none;
+            font-size: 0.9rem;
+            margin-bottom: 12px;
+        }
+
+        textarea { resize: vertical; min-height: 80px; }
+
+        button {
+            background-color: var(--accent-primary);
+            color: white;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+        }
+
+        button:hover { opacity: 0.9; transform: translateY(-1px); }
+        .btn-secondary { background-color: var(--bg-card-hover); color: var(--text-main); }
+        .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text-muted); }
+
+        /* Mood Selector */
+        .mood-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-bottom: 15px; }
+        .mood-btn {
+            background: var(--bg-main);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: 10px 4px;
+            font-size: 1.4rem;
+            text-align: center;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+        .mood-btn span { font-size: 0.65rem; color: var(--text-muted); }
+        .mood-btn.selected { border-color: var(--accent-primary); background: rgba(99, 102, 241, 0.15); }
+
+        /* Companion Circle List */
+        .companion-list { display: flex; flex-direction: column; gap: 12px; }
+        .companion-card {
+            background-color: var(--bg-main);
+            padding: 14px;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .companion-avatar {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            background: var(--accent-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: white;
+        }
+
+        /* Discussion & Updates Feed */
+        .feed-item {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 16px;
+            margin-bottom: 14px;
+        }
+        .feed-meta { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; font-size: 0.8rem; color: var(--text-muted); }
+        .reaction-bar { display: flex; gap: 8px; margin-top: 12px; border-top: 1px solid var(--border); padding-top: 10px; flex-wrap: wrap; }
+        .reaction-btn { background: var(--bg-main); border: 1px solid var(--border); border-radius: 20px; padding: 4px 10px; font-size: 0.75rem; width: auto; margin: 0; }
+
+        /* Onboarding Modal */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(8px);
+            z-index: 2000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .modal-box {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 24px;
+            width: 100%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        /* Progress Bar */
+        .progress-container { background: var(--bg-main); border-radius: 10px; height: 8px; width: 100%; overflow: hidden; margin: 8px 0 14px; }
+        .progress-bar { background: linear-gradient(90deg, var(--accent-primary), var(--accent-glow)); height: 100%; width: 0%; transition: width 0.3s; }
+
+        /* Donation Banner */
+        .donation-card {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.15), rgba(16, 185, 129, 0.1));
+            border: 1px solid var(--accent-primary);
+            border-radius: var(--radius-lg);
+            padding: 16px;
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        /* Bottom Nav */
+        .bottom-nav {
+            position: fixed; bottom: 0; left: 0; right: 0;
+            background-color: var(--bg-card);
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: space-around;
+            padding: 10px 0;
+            z-index: 1000;
+        }
+        .nav-item {
+            display: flex; flex-direction: column; align-items: center; gap: 4px;
+            color: var(--text-muted); font-size: 0.7rem; background: none; border: none; width: auto; margin: 0;
+        }
+        .nav-item.active { color: var(--accent-glow); }
+        .nav-item i { font-size: 1.15rem; }
+    </style>
+</head>
+<body>
+
+    <!-- Header -->
+    <header>
+        <div class="logo-box">
+            <i class="fa-solid fa-compass"></i> MyPhase
+        </div>
+        <div class="phase-badge" id="headerPhaseBadge">
+            <i class="fa-solid fa-seedling"></i> Matching Phase...
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main>
+
+        <!-- 1. TODAY TAB -->
+        <div id="tab-today" class="tab-content active">
+            <!-- Greeting & Progress -->
+            <div class="card">
+                <div class="card-header">
+                    <div>
+                        <h2 style="font-size: 1.2rem;" id="userGreeting">Welcome back 👋</h2>
+                        <p style="font-size: 0.8rem; color: var(--text-muted);" id="currentGoalText">Goal: Set your target in onboarding</p>
+                    </div>
+                </div>
+                <div style="font-size: 0.8rem; display: flex; justify-content: space-between; color: var(--text-muted);">
+                    <span>Phase Progress</span>
+                    <span id="progressPercentText">Day 12 of 90</span>
+                </div>
+                <div class="progress-container">
+                    <div class="progress-bar" id="phaseProgressBar" style="width: 25%;"></div>
+                </div>
+            </div>
+
+            <!-- Daily Check-in & Mood -->
+            <div class="card">
+                <div class="card-title" style="margin-bottom: 12px;"><i class="fa-solid fa-face-smile"></i> How do you feel today?</div>
+                <div class="mood-grid">
+                    <div class="mood-btn" onclick="selectMood('Great', this)">😊<span>Great</span></div>
+                    <div class="mood-btn" onclick="selectMood('Good', this)">🙂<span>Good</span></div>
+                    <div class="mood-btn" onclick="selectMood('Neutral', this)">😐<span>Neutral</span></div>
+                    <div class="mood-btn" onclick="selectMood('Sad', this)">😔<span>Sad</span></div>
+                    <div class="mood-btn" onclick="selectMood('Struggling', this)">😣<span>Struggling</span></div>
+                </div>
+                <textarea id="dailyUpdateInput" placeholder="Share one update with your private circle today..."></textarea>
+                <button onclick="postDailyUpdate()"><i class="fa-solid fa-paper-plane"></i> Post Daily Update</button>
+            </div>
+
+            <!-- Latest Circle Updates Stream -->
+            <div class="card-title" style="margin-bottom: 12px; font-size: 1rem;"><i class="fa-solid fa-users-between-lines"></i> Circle Companion Updates</div>
+            <div id="circleUpdatesStream"></div>
+
+            <!-- Daily Motivation -->
+            <div class="card" style="background: rgba(255,255,255,0.02); text-align: center;">
+                <i class="fa-solid fa-quote-left" style="color: var(--accent-glow); font-size: 1.2rem; margin-bottom: 8px;"></i>
+                <p style="font-size: 0.85rem; font-style: italic; color: var(--text-muted);">"Small daily steps build giant lifetime transformations. Focus on today."</p>
+            </div>
+        </div>
+
+        <!-- 2. CIRCLE TAB -->
+        <div id="tab-circle" class="tab-content">
+            <div class="card">
+                <div class="card-header">
+                    <div>
+                        <div class="card-title" id="circleNameTitle"><i class="fa-solid fa-shield-halved"></i> Private Circle #104</div>
+                        <p style="font-size: 0.8rem; color: var(--text-muted);">4 Companions • Closed Circle • English</p>
+                    </div>
+                </div>
+                <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 14px;">
+                    This is your safe, private circle. Nobody else can view or join this group.
+                </p>
+                <div class="companion-list" id="companionList"></div>
+            </div>
+        </div>
+
+        <!-- 3. DISCUSSION TAB -->
+        <div id="tab-discussion" class="tab-content">
+            <div class="card">
+                <div class="card-title" style="margin-bottom: 12px;"><i class="fa-solid fa-comments"></i> Start a Circle Discussion</div>
+                <input type="text" id="discussionTitle" placeholder="Title (e.g., Seeking advice on time management)">
+                <textarea id="discussionContent" placeholder="Ask a question, share a lesson, or request support..."></textarea>
+                <button onclick="postDiscussion()"><i class="fa-solid fa-plus"></i> Post Discussion</button>
+            </div>
+
+            <div class="card-title" style="margin-bottom: 12px; font-size: 1rem;"><i class="fa-solid fa-list-check"></i> Recent Circle Topics</div>
+            <div id="discussionFeed"></div>
+        </div>
+
+        <!-- 4. TIMELINE TAB -->
+        <div id="tab-timeline" class="tab-content">
+            <div class="card">
+                <div class="card-title" style="margin-bottom: 14px;"><i class="fa-solid fa-timeline"></i> Personal Journey Timeline</div>
+                
+                <div style="border-left: 2px dashed var(--accent-primary); padding-left: 16px; margin-left: 8px;">
+                    <div style="margin-bottom: 20px;">
+                        <span class="phase-badge">Active Phase</span>
+                        <h4 style="margin-top: 6px;" id="timelinePhaseTitle">Learning Programming</h4>
+                        <p style="font-size: 0.8rem; color: var(--text-muted);" id="timelineGoalText">Goal: "Build my first Flutter app"</p>
+                    </div>
+
+                    <!-- Locked Future Letter Card -->
+                    <div class="card" style="background: var(--bg-main); margin-bottom: 0;">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <i class="fa-solid fa-lock" style="font-size: 1.2rem; color: var(--accent-warning);"></i>
+                            <div>
+                                <h4 style="font-size: 0.9rem;">Private Letter to Future Self</h4>
+                                <p style="font-size: 0.75rem; color: var(--text-muted);">Unlocks automatically when phase completes.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mentor Promotion CTA -->
+            <div class="card" style="text-align: center;">
+                <i class="fa-solid fa-award" style="font-size: 2rem; color: var(--accent-glow); margin-bottom: 10px;"></i>
+                <h3>Complete & Graduate</h3>
+                <p style="font-size: 0.8rem; color: var(--text-muted); margin: 8px 0 14px;">Finished your phase? You can graduate and apply to become a Mentor to help future circles.</p>
+                <button class="btn-secondary" onclick="alert('Congratulations! Your mentor request has been submitted for evaluation.')">Graduate & Become Mentor</button>
+            </div>
+        </div>
+
+        <!-- 5. PROFILE & SETTINGS TAB -->
+        <div id="tab-profile" class="tab-content">
+            <div class="card">
+                <div style="text-align: center; margin-bottom: 16px;">
+                    <div class="companion-avatar" style="width: 64px; height: 64px; font-size: 1.5rem; margin: 0 auto 10px;" id="profileAvatar">U</div>
+                    <h3 id="profileName">User Name</h3>
+                    <p style="font-size: 0.8rem; color: var(--text-muted);" id="profileLocation">Location</p>
+                </div>
+                <div style="font-size: 0.85rem; display: flex; flex-direction: column; gap: 8px; border-top: 1px solid var(--border); padding-top: 14px;">
+                    <div><strong>Language:</strong> <span id="profileLang">English</span></div>
+                    <div><strong>Mentor Status:</strong> <span style="color: var(--accent-success);">Active Member</span></div>
+                </div>
+            </div>
+
+            <!-- Voluntary Support Banner -->
+            <div class="donation-card">
+                <i class="fa-solid fa-heart" style="color: #ef4444; font-size: 1.4rem; margin-bottom: 8px;"></i>
+                <h4 style="font-size: 0.95rem;">Support MyPhase Community</h4>
+                <p style="font-size: 0.78rem; color: var(--text-muted); margin: 6px 0 12px;">
+                    If MyPhase helped you through an important chapter of your life, consider supporting us so someone else can experience the same support.
+                </p>
+                <button class="btn-secondary" style="font-size: 0.8rem; padding: 8px;" onclick="alert('Thank you for choosing to support MyPhase! Voluntary contribution plans will open shortly.')">Make a Voluntary Donation</button>
+            </div>
+
+            <button class="btn-outline" style="margin-top: 15px;" onclick="openAdminDashboard()"><i class="fa-solid fa-chart-line"></i> Admin Dashboard</button>
+            <button class="btn-outline" style="color: #ef4444; border-color: rgba(239, 68, 68, 0.3);" onclick="resetAccount()"><i class="fa-solid fa-right-from-bracket"></i> Reset Account / Phase</button>
+        </div>
+
+    </main>
+
+    <!-- Bottom Navigation -->
+    <nav class="bottom-nav">
+        <button class="nav-item active" onclick="switchTab('today', this)"><i class="fa-solid fa-sun"></i><span>Today</span></button>
+        <button class="nav-item" onclick="switchTab('circle', this)"><i class="fa-solid fa-users"></i><span>Circle</span></button>
+        <button class="nav-item" onclick="switchTab('discussion', this)"><i class="fa-solid fa-comments"></i><span>Discussion</span></button>
+        <button class="nav-item" onclick="switchTab('timeline', this)"><i class="fa-solid fa-timeline"></i><span>Timeline</span></button>
+        <button class="nav-item" onclick="switchTab('profile', this)"><i class="fa-solid fa-user"></i><span>Profile</span></button>
+    </nav>
+
+    <!-- ONBOARDING FLOW MODAL -->
+    <div id="onboardingModal" class="modal-overlay" style="display: none;">
+        <div class="modal-box">
+            <h2 style="font-size: 1.3rem; margin-bottom: 6px; color: var(--accent-glow);">Welcome to MyPhase</h2>
+            <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 16px;">"No one should go through a life phase alone."</p>
+            
+            <form id="onboardingForm" onsubmit="completeOnboarding(event)">
+                <label style="font-size: 0.75rem; color: var(--text-muted);">First Name</label>
+                <input type="text" id="obName" required placeholder="e.g. Osam">
+
+                <label style="font-size: 0.75rem; color: var(--text-muted);">Country & City</label>
+                <div style="display: flex; gap: 8px;">
+                    <input type="text" id="obCountry" required placeholder="Country">
+                    <input type="text" id="obCity" required placeholder="City">
+                </div>
+
+                <label style="font-size: 0.75rem; color: var(--text-muted);">Select Life Phase</label>
+                <select id="obPhase">
+                    <option value="Learning Programming">🎓 Learning Programming</option>
+                    <option value="Learning English">📚 Learning English</option>
+                    <option value="Career Change">💼 Career Change / Job Search</option>
+                    <option value="Starting Startup">🚀 Starting Startup / Business</option>
+                    <option value="New Parent">👶 New Parent / Family</option>
+                    <option value="Moving Abroad">🌍 Moving Abroad / New City</option>
+                    <option value="Health & Fitness">🏋️ Weight Loss & Fitness</option>
+                    <option value="Habit Building">🧘 Habit Building (Meditation/Reading)</option>
+                </select>
+
+                <label style="font-size: 0.75rem; color: var(--text-muted);">One Main Goal</label>
+                <input type="text" id="obGoal" required placeholder="e.g. Become a full-stack developer in 6 months">
+
+                <label style="font-size: 0.75rem; color: var(--text-muted);">Phase Duration</label>
+                <select id="obDuration">
+                    <option value="1">1 Month</option>
+                    <option value="3" selected>3 Months</option>
+                    <option value="6">6 Months</option>
+                    <option value="12">12 Months</option>
+                </select>
+
+                <label style="font-size: 0.75rem; color: var(--text-muted);">Private Letter to Future Self (Locked)</label>
+                <textarea id="obLetter" required placeholder="What do you hope to achieve at the end of this phase?"></textarea>
+
+                <button type="submit" style="margin-top: 10px;"><i class="fa-solid fa-circle-check"></i> Find My Companion Circle</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- ADMIN DASHBOARD MODAL -->
+    <div id="adminModal" class="modal-overlay" style="display: none;">
+        <div class="modal-box" style="max-width: 600px;">
+            <div class="card-header">
+                <h3><i class="fa-solid fa-chart-pie"></i> Admin Analytics Overview</h3>
+                <button class="reaction-btn" onclick="closeAdminDashboard()">✕</button>
+            </div>
+            
+            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 16px;">
+                <div class="card" style="padding: 12px; margin: 0; text-align: center;">
+                    <div style="font-size: 1.4rem; font-weight: bold; color: var(--accent-glow);">1,248</div>
+                    <div style="font-size: 0.7rem; color: var(--text-muted);">Total Active Users</div>
+                </div>
+                <div class="card" style="padding: 12px; margin: 0; text-align: center;">
+                    <div style="font-size: 1.4rem; font-weight: bold; color: var(--accent-success);">312</div>
+                    <div style="font-size: 0.7rem; color: var(--text-muted);">Active Circles</div>
+                </div>
+            </div>
+
+            <h4 style="font-size: 0.85rem; margin-bottom: 8px;">Popular Phases Breakdown</h4>
+            <div style="font-size: 0.8rem; color: var(--text-muted); display: flex; flex-direction: column; gap: 6px;">
+                <div>• Learning Programming: 38%</div>
+                <div>• Career Change: 24%</div>
+                <div>• Starting Startup: 18%</div>
+                <div>• Weight Loss & Health: 12%</div>
+                <div>• Moving Abroad: 8%</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript Application Logic -->
+    <script>
+        // Supabase Initialization (Optional fallback to local storage if credentials empty)
+        const SUPABASE_URL = "";
+        const SUPABASE_KEY = "";
+        let db = null;
+
+        if (SUPABASE_URL && SUPABASE_KEY) {
+            db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        }
+
+        // App State
+        let currentUser = JSON.parse(localStorage.getItem('myphase_user')) || null;
+        let dailyUpdates = JSON.parse(localStorage.getItem('myphase_updates')) || [];
+        let discussions = JSON.parse(localStorage.getItem('myphase_discussions')) || [];
+        let selectedMood = 'Good';
+
+        function initApp() {
+            if (!currentUser) {
+                document.getElementById('onboardingModal').style.display = 'flex';
+            } else {
+                renderState();
+            }
+        }
+
+        function completeOnboarding(e) {
+            e.preventDefault();
+            currentUser = {
+                id: Date.now(),
+                name: document.getElementById('obName').value,
+                country: document.getElementById('obCountry').value,
+                city: document.getElementById('obCity').value,
+                phase: document.getElementById('obPhase').value,
+                goal: document.getElementById('obGoal').value,
+                duration: document.getElementById('obDuration').value,
+                letter: document.getElementById('obLetter').value,
+                joinedDate: new Date().toISOString()
+            };
+
+            localStorage.setItem('myphase_user', JSON.stringify(currentUser));
+            document.getElementById('onboardingModal').style.display = 'none';
+            
+            // Seed sample mock companions for the assigned circle
+            seedSampleCircleData();
+            renderState();
+        }
+
+        function selectMood(mood, btn) {
+            selectedMood = mood;
+            document.querySelectorAll('.mood-btn').forEach(b => b.classList.remove('selected'));
+            btn.classList.add('selected');
+        }
+
+        function postDailyUpdate() {
+            const input = document.getElementById('dailyUpdateInput');
+            if (!input.value.trim()) return;
+
+            const update = {
+                id: Date.now(),
+                userName: currentUser.name,
+                mood: selectedMood,
+                text: input.value,
+                time: "Just now",
+                reactions: { support: 0, celebrate: 0 }
+            };
+
+            dailyUpdates.unshift(update);
+            localStorage.setItem('myphase_updates', JSON.stringify(dailyUpdates));
+            input.value = '';
+            renderFeeds();
+        }
+
+        function postDiscussion() {
+            const title = document.getElementById('discussionTitle').value;
+            const content = document.getElementById('discussionContent').value;
+            if (!title || !content) return;
+
+            const discussion = {
+                id: Date.now(),
+                userName: currentUser.name,
+                title: title,
+                content: content,
+                time: "Just now",
+                comments: []
+            };
+
+            discussions.unshift(discussion);
+            localStorage.setItem('myphase_discussions', JSON.stringify(discussions));
+            document.getElementById('discussionTitle').value = '';
+            document.getElementById('discussionContent').value = '';
+            renderDiscussions();
+        }
+
+        function seedSampleCircleData() {
+            if (dailyUpdates.length === 0) {
+                dailyUpdates = [
+                    { id: 1, userName: "Sarah M.", mood: "Great", text: "Completed module 4 today! Feeling making real progress.", time: "2 hours ago", reactions: { support: 2, celebrate: 3 } },
+                    { id: 2, userName: "David K.", mood: "Struggling", text: "Having a tough time balancing work and daily goals.", time: "4 hours ago", reactions: { support: 4, celebrate: 0 } }
+                ];
+                localStorage.setItem('myphase_updates', JSON.stringify(dailyUpdates));
+            }
+
+            if (discussions.length === 0) {
+                discussions = [
+                    { id: 101, userName: "Elena R.", title: "How do you stay consistent on weekends?", content: "Looking for simple daily routines that work when staying home.", time: "Yesterday", comments: 2 }
+                ];
+                localStorage.setItem('myphase_discussions', JSON.stringify(discussions));
+            }
+        }
+
+        function renderState() {
+            if (!currentUser) return;
+
+            // Header & Banner
+            document.getElementById('headerPhaseBadge').innerHTML = `<i class="fa-solid fa-seedling"></i> ${currentUser.phase}`;
+            document.getElementById('userGreeting').innerText = `Welcome, ${currentUser.name}`;
+            document.getElementById('currentGoalText').innerText = `Main Goal: "${currentUser.goal}"`;
+
+            // Profile
+            document.getElementById('profileAvatar').innerText = currentUser.name.charAt(0).toUpperCase();
+            document.getElementById('profileName').innerText = currentUser.name;
+            document.getElementById('profileLocation').innerText = `${currentUser.city}, ${currentUser.country}`;
+
+            // Timeline
+            document.getElementById('timelinePhaseTitle').innerText = currentUser.phase;
+            document.getElementById('timelineGoalText').innerText = `Goal: "${currentUser.goal}"`;
+
+            // Companion List
+            renderCompanions();
+            renderFeeds();
+            renderDiscussions();
+        }
+
+        function renderCompanions() {
+            const container = document.getElementById('companionList');
+            container.innerHTML = `
+                <div class="companion-card">
+                    <div style="display:flex; align-items:center; gap:12px;">
+                        <div class="companion-avatar">${currentUser.name.charAt(0)}</div>
+                        <div>
+                            <strong>${currentUser.name} (You)</strong>
+                            <p style="font-size:0.75rem; color:var(--text-muted);">${currentUser.city}, ${currentUser.country}</p>
+                        </div>
+                    </div>
+                    <span class="phase-badge" style="font-size:0.65rem;">Active</span>
+                </div>
+                <div class="companion-card">
+                    <div style="display:flex; align-items:center; gap:12px;">
+                        <div class="companion-avatar" style="background:#10b981">S</div>
+                        <div>
+                            <strong>Sarah M.</strong>
+                            <p style="font-size:0.75rem; color:var(--text-muted);">London, UK</p>
+                        </div>
+                    </div>
+                    <span style="font-size:0.75rem; color:var(--accent-glow)">Day 14</span>
+                </div>
+                <div class="companion-card">
+                    <div style="display:flex; align-items:center; gap:12px;">
+                        <div class="companion-avatar" style="background:#f59e0b">D</div>
+                        <div>
+                            <strong>David K.</strong>
+                            <p style="font-size:0.75rem; color:var(--text-muted);">Toronto, Canada</p>
+                        </div>
+                    </div>
+                    <span style="font-size:0.75rem; color:var(--accent-glow)">Day 12</span>
+                </div>
+            `;
+        }
+
+        function renderFeeds() {
+            const container = document.getElementById('circleUpdatesStream');
+            container.innerHTML = '';
+            dailyUpdates.forEach(up => {
+                const div = document.createElement('div');
+                div.className = 'feed-item';
+                div.innerHTML = `
+                    <div class="feed-meta">
+                        <strong>${up.userName} • Mood: ${up.mood}</strong>
+                        <span>${up.time}</span>
+                    </div>
+                    <p style="font-size:0.9rem; color:#e2e8f0;">${up.text}</p>
+                    <div class="reaction-bar">
+                        <button class="reaction-btn" onclick="addReaction(this)"><i class="fa-solid fa-hand-holding-heart"></i> Support</button>
+                        <button class="reaction-btn" onclick="addReaction(this)"><i class="fa-solid fa-party-horn"></i> Celebrate</button>
+                        <button class="reaction-btn" onclick="addReaction(this)"><i class="fa-solid fa-lightbulb"></i> Helpful</button>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function renderDiscussions() {
+            const container = document.getElementById('discussionFeed');
+            container.innerHTML = '';
+            discussions.forEach(d => {
+                const div = document.createElement('div');
+                div.className = 'feed-item';
+                div.innerHTML = `
+                    <div class="feed-meta">
+                        <strong>${d.userName}</strong>
+                        <span>${d.time}</span>
+                    </div>
+                    <h4 style="font-size:0.95rem; margin-bottom:6px;">${d.title}</h4>
+                    <p style="font-size:0.85rem; color:var(--text-muted);">${d.content}</p>
+                    <div class="reaction-bar">
+                        <button class="reaction-btn" onclick="alert('Comments section opens here')"><i class="fa-regular fa-comment"></i> Reply</button>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function addReaction(btn) {
+            btn.style.borderColor = 'var(--accent-glow)';
+            btn.style.color = 'var(--accent-glow)';
+        }
+
+        function switchTab(tabId, btn) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            document.getElementById(`tab-${tabId}`).classList.add('active');
+            btn.classList.add('active');
+        }
+
+        function openAdminDashboard() { document.getElementById('adminModal').style.display = 'flex'; }
+        function closeAdminDashboard() { document.getElementById('adminModal').style.display = 'none'; }
+
+        function resetAccount() {
+            if (confirm("Reset current account/phase setup?")) {
+                localStorage.removeItem('myphase_user');
+                location.reload();
+            }
+        }
+
+        // Initialize Application
+        initApp();
+    </script>
+</body>
+</html>
