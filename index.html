@@ -23,7 +23,7 @@
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; }
         body { background-color: var(--bg-main); color: var(--text-main); min-height: 100vh; padding-bottom: 90px; }
 
-        header { background: var(--bg-card); border-bottom: 1px solid var(--border); padding: 18px 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 12px rgba(2,6,23,0.4); }
+        header { background: var(--bg-card); border-bottom: 1px solid var(--border); padding: 18px 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 12px rgba(0,0,0,0.25); }
         .logo { font-weight: 700; font-size: 1.25rem; color: var(--accent-glow); display:flex; align-items:center; gap:8px; }
 
         main { padding: 20px; max-width: 760px; margin: 20px auto; }
@@ -35,7 +35,7 @@
         .form-control { width: 100%; padding: 14px; border-radius: var(--radius-md); border: 1px solid var(--border); background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(0,0,0,0.02)); color: var(--text-main); }
         textarea.form-control { min-height: 88px; resize: vertical; }
 
-        .btn { display: inline-block; padding: 12px 16px; border-radius: 999px; background: linear-gradient(90deg, var(--accent-primary), var(--accent-glow)); color: white; font-weight: 700; border: none; cursor: pointer; }
+        .btn { display: inline-block; padding: 12px 16px; border-radius: 999px; background: linear-gradient(90deg, var(--accent-primary), var(--accent-glow)); color: white; font-weight: 700; border: none; }
         .btn.ghost { background: transparent; border: 1px solid var(--border); color: var(--text-main); }
 
         .nav-bar { position: fixed; bottom: 0; left: 0; right: 0; background: var(--bg-card); border-top: 1px solid var(--border); display: flex; justify-content: space-around; padding: 12px 0; }
@@ -117,6 +117,15 @@
           /* cap modal height and allow internal scroll */
           max-height: calc(100vh - 48px);
           overflow-y: auto;
+          /* ensure enough bottom padding so buttons inside modal are not hidden by fixed nav-bar */
+          padding-bottom: calc(120px + env(safe-area-inset-bottom));
+        }
+
+        /* Optional: make action buttons inside modal easier to reach (they will scroll above nav when sticky) */
+        .modal-box .sticky-action {
+          position: sticky;
+          bottom: calc(18px + env(safe-area-inset-bottom));
+          background: transparent;
         }
 
     </style>
@@ -242,12 +251,12 @@
                         <option>More than 12 Months</option>
                     </select>
 
-                    <label style="font-size:0.9rem; color:var(--text-muted); margin-bottom:6px; display:block; margin-top:6px;">Why did you join MyPhase? <span class="muted" style="font-size:0.85rem;">(optional)</span></label>
+                    <label style="font-size:0.9rem; color:var(--text-muted); margin-bottom:6px; display:block; margin-top:6px;">Why did you join MyPhase? <span class="muted" style="font-size:0.85rem;"></label>
                     <textarea id="reason" class="form-control" placeholder="Write a few words..."></textarea>
 
                     <div style="display:flex; gap:10px; margin-top:10px;">
                         <button type="button" class="btn ghost" onclick="backToStep1()">← Back</button>
-                        <button type="submit" class="btn" style="flex:1">Create MyPhase Account</button>
+                        <button type="submit" class="btn sticky-action" style="flex:1">Create MyPhase Account</button>
                     </div>
                 </form>
 
