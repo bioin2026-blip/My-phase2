@@ -3,15 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MyPhase</title>
+    <title>MyPhase – Life Cycle Social Network</title>
+    <meta name="theme-color" content="#0f172a">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Supabase Client JS -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
     <style>
         :root {
             --bg-main: #0f172a;
             --bg-card: #1e293b;
             --accent-primary: #6366f1;
             --accent-glow: #818cf8;
+            --accent-danger: #ef4444;
             --text-main: #f8fafc;
             --text-muted: #94a3b8;
             --border: #334155;
@@ -20,92 +24,189 @@
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
-        body { background-color: var(--bg-main); color: var(--text-main); min-height: 100vh; padding-bottom: 70px; }
+        body { background-color: var(--bg-main); color: var(--text-main); min-height: 100vh; padding-bottom: 90px; }
 
-        header { background: var(--bg-card); border-bottom: 1px solid var(--border); padding: 14px 16px; display: flex; justify-content: space-between; align-items: center; }
-        .logo { font-weight: bold; font-size: 1.2rem; color: var(--accent-glow); }
+        header {
+            background-color: var(--bg-card); border-bottom: 1px solid var(--border);
+            padding: 12px 16px; display: flex; justify-content: space-between; align-items: center;
+            position: sticky; top: 0; z-index: 100;
+        }
 
-        main { padding: 16px; max-width: 600px; margin: 0 auto; }
-        .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 16px; margin-bottom: 16px; }
+        .logo-box { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 1.1rem; color: var(--accent-glow); }
+        .timer-badge { background: rgba(239, 68, 68, 0.15); color: #f87171; padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; border: 1px solid rgba(239, 68, 68, 0.4); font-weight: 600; display: flex; align-items: center; gap: 4px; }
 
-        input, select, textarea, button { width: 100%; padding: 12px; border-radius: var(--radius-md); border: 1px solid var(--border); background: var(--bg-main); color: var(--text-main); margin-bottom: 10px; font-size: 0.9rem; }
-        button { background: var(--accent-primary); color: white; font-weight: bold; border: none; cursor: pointer; transition: 0.2s; }
-        button:hover { opacity: 0.9; }
-        
-        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(15, 23, 42, 0.95); z-index: 2000; display: flex; align-items: center; justify-content: center; padding: 16px; }
-        .modal-box { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 24px; width: 100%; max-width: 400px; }
-        
-        .btn-search { background: linear-gradient(135deg, #6366f1, #818cf8); padding: 14px; font-size: 1rem; border-radius: var(--radius-md); box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3); }
+        main { padding: 16px 12px; max-width: 600px; margin: 0 auto; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        .card { background-color: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 16px; margin-bottom: 16px; }
+        input, select, textarea, button {
+            width: 100%; padding: 10px 12px; border-radius: var(--radius-md);
+            border: 1px solid var(--border); background-color: var(--bg-main); color: var(--text-main); margin-bottom: 10px; font-size: 0.85rem;
+        }
+        button { background-color: var(--accent-primary); color: white; font-weight: 600; border: none; cursor: pointer; transition: 0.2s; }
+        button:active { transform: scale(0.98); }
+        .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text-muted); }
+
+        .mood-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-bottom: 10px; }
+        .mood-btn { background: var(--bg-main); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 6px 2px; text-align: center; cursor: pointer; font-size: 1.1rem; }
+        .mood-btn.selected { border-color: var(--accent-primary); background: rgba(99, 102, 241, 0.2); }
+
+        .feed-item { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 14px; margin-bottom: 12px; }
+        .feed-meta { display: flex; justify-content: space-between; align-items: center; font-size: 0.75rem; color: var(--text-muted); margin-bottom: 6px; }
+        .user-tag { background: rgba(99, 102, 241, 0.15); color: var(--accent-glow); padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; }
+
+        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(15, 23, 42, 0.98); z-index: 2000; display: flex; align-items: center; justify-content: center; padding: 16px; }
+        .modal-box { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 20px; width: 100%; max-width: 450px; max-height: 90vh; overflow-y: auto; }
+
+        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background-color: var(--bg-card); border-top: 1px solid var(--border); display: flex; justify-content: space-around; padding: 10px 0; z-index: 1000; }
+        .nav-item { color: var(--text-muted); font-size: 0.7rem; background: none; border: none; width: auto; margin: 0; display: flex; flex-direction: column; align-items: center; gap: 3px; }
+        .nav-item.active { color: var(--accent-glow); }
+
+        .filter-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px; }
+        .lock-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(15, 23, 42, 0.98); z-index: 3000; display: none; flex-direction: column; align-items: center; justify-content: center; padding: 20px; text-align: center; }
     </style>
 </head>
 <body>
 
     <header>
-        <div class="logo"><i class="fa-solid fa-compass"></i> MyPhase</div>
-        <button onclick="logout()" style="width:auto; padding:6px 12px; margin:0; font-size:0.8rem; background:var(--border);">Sign Out</button>
+        <div class="logo-box"><i class="fa-solid fa-compass"></i> MyPhase</div>
+        <div class="timer-badge"><i class="fa-solid fa-clock"></i> <span id="timeRemaining">02:00:00</span></div>
     </header>
 
     <main>
-        <!-- PROFILE SUMMARY -->
-        <div class="card">
-            <h3 id="displayProfileName">Loading profile...</h3>
-            <p id="displayProfilePhase" style="font-size: 0.85rem; color: var(--accent-glow); margin-top:4px;"></p>
-            <p id="displayProfileLoc" style="font-size: 0.8rem; color: var(--text-muted);"></p>
+        <!-- TODAY TAB -->
+        <div id="tab-today" class="tab-content active">
+            <div class="card">
+                <h2 id="userGreeting" style="font-size: 1.1rem;">Welcome 👋</h2>
+                <p id="currentGoalText" style="font-size: 0.8rem; color: var(--text-muted); margin-top: 2px;">Goal: Loading...</p>
+                <p id="phaseMetaText" style="font-size: 0.75rem; color: var(--accent-glow); margin-top: 4px;"></p>
+            </div>
+
+            <div class="card">
+                <div style="margin-bottom: 8px; font-weight: 600; font-size: 0.9rem;"><i class="fa-solid fa-face-smile"></i> Daily Update</div>
+                <div class="mood-grid">
+                    <div class="mood-btn selected" onclick="selectMood('😊', this)">😊</div>
+                    <div class="mood-btn" onclick="selectMood('🙂', this)">🙂</div>
+                    <div class="mood-btn" onclick="selectMood('😐', this)">😐</div>
+                    <div class="mood-btn" onclick="selectMood('😔', this)">😔</div>
+                    <div class="mood-btn" onclick="selectMood('😣', this)">😣</div>
+                </div>
+                <textarea id="dailyUpdateInput" placeholder="Share your update or progress today..."></textarea>
+                <button onclick="postDailyUpdate()"><i class="fa-solid fa-paper-plane"></i> Post Update</button>
+            </div>
+
+            <div style="font-weight: 600; margin-bottom: 8px; font-size: 0.95rem;">Circle Feed</div>
+            <div id="circleUpdatesStream">Loading updates...</div>
         </div>
 
-        <!-- MATCH / CIRCLE SECTION -->
-        <div class="card" style="text-align: center;">
-            <h4 style="margin-bottom: 8px; color: var(--accent-glow);"><i class="fa-solid fa-users-viewfinder"></i> Find Your Phase Circle</h4>
-            <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 14px;">Discover people who share your exact phase and location.</p>
-            
-            <!-- زر البحث عن الأشخاص -->
-            <button class="btn-search" onclick="findMyCircle()">
-                <i class="fa-solid fa-magnifying-glass"></i> Find People in My Phase
-            </button>
+        <!-- CIRCLES & MATCHING TAB -->
+        <div id="tab-circles" class="tab-content">
+            <div class="card">
+                <div style="font-weight: 600; margin-bottom: 8px; font-size: 0.95rem;"><i class="fa-solid fa-filter"></i> Search & Match Members</div>
+                <div class="filter-grid">
+                    <input type="text" id="searchCountry" placeholder="Country" onkeyup="filterMembers()">
+                    <input type="text" id="searchCity" placeholder="City" onkeyup="filterMembers()">
+                    <input type="text" id="searchLang" placeholder="Language" onkeyup="filterMembers()">
+                    <input type="number" id="searchAge" placeholder="Age" onkeyup="filterMembers()">
+                </div>
+            </div>
 
-            <!-- القائمة التي تظهر فيها النتائج بعد الضغط -->
-            <div id="circleMembersList" style="margin-top: 16px; text-align: left;"></div>
+            <div style="font-weight: 600; margin-bottom: 8px; font-size: 0.95rem;">Matched Members in Your Phase</div>
+            <div id="matchedMembersList">Loading members...</div>
         </div>
 
-        <!-- DAILY UPDATE SECTION -->
-        <div class="card">
-            <h4 style="margin-bottom:10px;">Daily Update</h4>
-            <textarea id="updateInput" placeholder="Share your update with your phase..." rows="3"></textarea>
-            <button onclick="postUpdate()">Post Update</button>
+        <!-- DISCUSSION TAB -->
+        <div id="tab-discussion" class="tab-content">
+            <div class="card">
+                <div style="margin-bottom: 8px; font-weight: 600; font-size: 0.95rem;"><i class="fa-solid fa-comments"></i> Start Discussion</div>
+                <input type="text" id="discussionTitle" placeholder="Topic title...">
+                <textarea id="discussionContent" placeholder="Ask a question or give advice..."></textarea>
+                <button onclick="postDiscussion()"><i class="fa-solid fa-plus"></i> Post Discussion</button>
+            </div>
+            <div id="discussionFeed">Loading discussions...</div>
         </div>
 
-        <!-- FEED -->
-        <div style="font-weight: bold; margin-bottom: 10px;">Phase Activity Feed</div>
-        <div id="feedList"></div>
+        <!-- PROFILE TAB -->
+        <div id="tab-profile" class="tab-content">
+            <div class="card" style="text-align: center;">
+                <h3 id="profileName">User</h3>
+                <p id="profileLocation" style="font-size: 0.8rem; color: var(--text-muted); margin-top: 4px;">Location</p>
+                <p id="profileRole" style="font-size: 0.8rem; color: var(--accent-glow); margin-top: 4px;"></p>
+            </div>
+            <button class="btn-outline" style="color: var(--accent-danger); border-color: var(--accent-danger);" onclick="logout()"><i class="fa-solid fa-right-from-bracket"></i> Logout</button>
+        </div>
     </main>
 
-    <!-- AUTH MODAL (التسجيل / تسجيل الدخول) -->
+    <!-- Bottom Navigation -->
+    <nav class="bottom-nav">
+        <button class="nav-item active" onclick="switchTab('today', this)"><i class="fa-solid fa-sun"></i><span>Today</span></button>
+        <button class="nav-item" onclick="switchTab('circles', this)"><i class="fa-solid fa-users-line"></i><span>Match/Circles</span></button>
+        <button class="nav-item" onclick="switchTab('discussion', this)"><i class="fa-solid fa-comments"></i><span>Discussion</span></button>
+        <button class="nav-item" onclick="switchTab('profile', this)"><i class="fa-solid fa-user"></i><span>Profile</span></button>
+    </nav>
+
+    <!-- TIME LOCK SCREEN -->
+    <div id="timeLockOverlay" class="lock-overlay">
+        <i class="fa-solid fa-lock" style="font-size: 3rem; color: var(--accent-danger); margin-bottom: 12px;"></i>
+        <h2>Daily 2-Hour Limit Reached</h2>
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 8px; max-width: 300px;">
+            You have reached your 2-hour daily interaction limit on MyPhase. Take a break and focus on your goals! You can return tomorrow.
+        </p>
+    </div>
+
+    <!-- AUTH & ONBOARDING MODAL -->
     <div id="authModal" class="modal-overlay">
         <div class="modal-box">
-            <h2 id="authTitle" style="color: var(--accent-glow); margin-bottom: 4px;">Sign In</h2>
-            <p id="authSub" style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px;">Welcome back! Enter your details.</p>
+            <h2 style="color: var(--accent-glow); margin-bottom: 4px;">Welcome to MyPhase</h2>
+            <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px;">Sign in or Create account to continue.</p>
 
-            <form onsubmit="handleAuth(event)">
+            <form id="authForm" onsubmit="handleAuth(event)">
                 <input type="email" id="authEmail" placeholder="Email" required>
-                <input type="password" id="authPassword" placeholder="Password" required minlength="6">
+                <input type="password" id="authPassword" placeholder="Password (min 6 chars)" required minlength="6">
                 
-                <div id="signUpFields" style="display: none;">
+                <div id="additionalFields">
                     <input type="text" id="obName" placeholder="First Name">
                     <div style="display: flex; gap: 6px;">
-                        <input type="text" id="obCountry" placeholder="Country" value="Sudan">
-                        <input type="text" id="obCity" placeholder="City" value="Khartoum">
+                        <input type="text" id="obCountry" placeholder="Country">
+                        <input type="text" id="obCity" placeholder="City">
                     </div>
-                    <label style="font-size: 0.75rem; color: var(--text-muted);">Current Phase:</label>
-                    <input type="text" id="obPhase" placeholder="e.g. new city, starting startup" value="new city">
+                    <div style="display: flex; gap: 6px;">
+                        <input type="text" id="obLanguage" placeholder="Language (e.g. Arabic, English)">
+                        <input type="number" id="obAge" placeholder="Age">
+                    </div>
+
+                    <label style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-bottom: 2px;">Your intent in this phase:</label>
+                    <select id="obRole">
+                        <option value="Seeking Advice">🙋 Need Advice & Support (أحتاج نصيحة)</option>
+                        <option value="Offering Support">💡 Want to Help & Guide (أريد تقديم مساعدة)</option>
+                        <option value="Peer Progress">🤝 Peer Collaboration (تبادل خبرات ومشاركة)</option>
+                    </select>
+
+                    <label style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-bottom: 2px;">Expected Phase Duration:</label>
+                    <select id="obDuration">
+                        <option value="1 Month">1 Month (شهر واحد)</option>
+                        <option value="6 Months">6 Months (6 أشهر)</option>
+                        <option value="1 Year">1 Year (سنة واحدة)</option>
+                        <option value="Long Term">Longer (أكثر من سنة)</option>
+                    </select>
+                    
+                    <label style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-bottom: 2px;">Current Phase:</label>
+                    <select id="obPhase" onchange="toggleCustomPhaseInput(this.value)">
+                        <option value="Starting Startup">🚀 Starting Startup</option>
+                        <option value="Learning Programming">🎓 Learning Programming</option>
+                        <option value="Learning English">📚 Learning English</option>
+                        <option value="Career Change">💼 Career Change</option>
+                        <option value="Health & Fitness">🏋️ Health & Fitness</option>
+                        <option value="CUSTOM">+ Add Custom Phase (إضافة مرحلة جديدة)</option>
+                    </select>
+
+                    <input type="text" id="obCustomPhase" placeholder="Write custom phase name..." style="display: none;">
+                    <input type="text" id="obGoal" placeholder="Your Main Goal">
                 </div>
 
-                <button type="submit" id="authBtn">Sign In</button>
+                <button type="submit" id="authBtn">Continue / Login</button>
             </form>
-
-            <p style="text-align: center; font-size: 0.8rem; color: var(--text-muted); margin-top: 12px;">
-                <span id="toggleText">Don't have an account?</span> 
-                <a href="#" onclick="toggleAuthMode(event)" id="toggleLink" style="color: var(--accent-glow); font-weight: bold;">Create Account</a>
-            </p>
         </div>
     </div>
 
@@ -115,153 +216,271 @@
         const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         let currentUser = null;
-        let myProfile = null;
-        let isSignUp = false;
+        let userProfile = null;
+        let selectedMood = '😊';
+        let allPhaseMembers = [];
+        let timerInterval = null;
+
+        // ⏱️ 2-HOUR TIMER SYSTEM
+        const DAILY_LIMIT_SECONDS = 7200; // 2 Hours
+
+        function initDailyTimer() {
+            const todayKey = 'myphase_time_' + new Date().toISOString().slice(0, 10);
+            let timeSpent = parseInt(localStorage.getItem(todayKey) || '0');
+
+            if (timeSpent >= DAILY_LIMIT_SECONDS) {
+                document.getElementById('timeLockOverlay').style.display = 'flex';
+                return;
+            }
+
+            timerInterval = setInterval(() => {
+                timeSpent++;
+                localStorage.setItem(todayKey, timeSpent);
+                let remaining = DAILY_LIMIT_SECONDS - timeSpent;
+
+                if (remaining <= 0) {
+                    clearInterval(timerInterval);
+                    document.getElementById('timeLockOverlay').style.display = 'flex';
+                } else {
+                    let hrs = Math.floor(remaining / 3600);
+                    let mins = Math.floor((remaining % 3600) / 60);
+                    let secs = remaining % 60;
+                    document.getElementById('timeRemaining').innerText = 
+                        `${String(hrs).padStart(2,'0')}:${String(mins).padStart(2,'0')}:${String(secs).padStart(2,'0')}`;
+                }
+            }, 1000);
+        }
+
+        function toggleCustomPhaseInput(val) {
+            const customInput = document.getElementById('obCustomPhase');
+            customInput.style.display = (val === 'CUSTOM') ? 'block' : 'none';
+        }
 
         async function initApp() {
+            initDailyTimer();
             const { data: { session } } = await db.auth.getSession();
-            if (session && session.user) {
+            if (session) {
                 currentUser = session.user;
                 await loadUserProfile();
                 document.getElementById('authModal').style.display = 'none';
+                loadFeeds();
             } else {
                 document.getElementById('authModal').style.display = 'flex';
             }
-
-            db.auth.onAuthStateChange(async (event, session) => {
-                if (session && session.user) {
-                    currentUser = session.user;
-                    await loadUserProfile();
-                    document.getElementById('authModal').style.display = 'none';
-                } else {
-                    currentUser = null;
-                    document.getElementById('authModal').style.display = 'flex';
-                }
-            });
-        }
-
-        function toggleAuthMode(e) {
-            if(e) e.preventDefault();
-            isSignUp = !isSignUp;
-            document.getElementById('signUpFields').style.display = isSignUp ? 'block' : 'none';
-            document.getElementById('authTitle').innerText = isSignUp ? "Create Account" : "Sign In";
-            document.getElementById('authBtn').innerText = isSignUp ? "Sign Up" : "Sign In";
-            document.getElementById('toggleText').innerText = isSignUp ? "Already have an account?" : "Don't have an account?";
-            document.getElementById('toggleLink').innerText = isSignUp ? "Sign In" : "Create Account";
         }
 
         async function handleAuth(e) {
             e.preventDefault();
-            const email = document.getElementById('authEmail').value.trim();
+            const email = document.getElementById('authEmail').value;
             const password = document.getElementById('authPassword').value;
 
-            if (isSignUp) {
-                let { data, error } = await db.auth.signUp({ email, password });
-                if (error) return alert("Error: " + error.message);
-                if (data.user) {
-                    currentUser = data.user;
+            let selectedPhase = document.getElementById('obPhase').value;
+            if (selectedPhase === 'CUSTOM') {
+                selectedPhase = document.getElementById('obCustomPhase').value.trim() || 'General Phase';
+            }
+
+            let { data, error } = await db.auth.signInWithPassword({ email, password });
+
+            if (error) {
+                const signUp = await db.auth.signUp({ email, password });
+                if (signUp.error) return alert("Error: " + signUp.error.message);
+                
+                currentUser = signUp.data.user;
+
+                if (currentUser) {
                     await db.from('profiles').insert([{
                         user_id: currentUser.id,
                         first_name: document.getElementById('obName').value || 'User',
                         email: email,
                         country: document.getElementById('obCountry').value || 'Global',
                         city: document.getElementById('obCity').value || 'City',
-                        current_phase: document.getElementById('obPhase').value.trim().toLowerCase()
+                        language: document.getElementById('obLanguage').value || 'English',
+                        age: parseInt(document.getElementById('obAge').value || '25'),
+                        role: document.getElementById('obRole').value,
+                        duration: document.getElementById('obDuration').value,
+                        current_phase: selectedPhase,
+                        goal: document.getElementById('obGoal').value || 'Complete Phase'
                     }]);
                 }
             } else {
-                let { data, error } = await db.auth.signInWithPassword({ email, password });
-                if (error) return alert("Error logging in: " + error.message);
                 currentUser = data.user;
             }
 
             await loadUserProfile();
             document.getElementById('authModal').style.display = 'none';
+            loadFeeds();
         }
 
         async function loadUserProfile() {
-            if (!currentUser) return;
             let { data } = await db.from('profiles').select('*').eq('user_id', currentUser.id).single();
             if (data) {
-                myProfile = data;
-                document.getElementById('displayProfileName').innerText = `Welcome, ${data.first_name || 'Member'} 👋`;
-                document.getElementById('displayProfilePhase').innerText = `Phase: ${data.current_phase}`;
-                document.getElementById('displayProfileLoc').innerText = `Location: ${data.city}, ${data.country}`;
-                loadFeeds();
+                userProfile = data;
+                document.getElementById('userGreeting').innerText = `Welcome, ${data.first_name} 👋`;
+                document.getElementById('currentGoalText').innerText = `Goal: ${data.goal}`;
+                document.getElementById('phaseMetaText').innerText = `Phase: ${data.current_phase} • Target Duration: ${data.duration || 'Not specified'}`;
+                document.getElementById('profileName').innerText = `${data.first_name} (${data.age || 'N/A'} yo)`;
+                document.getElementById('profileLocation').innerText = `${data.city || 'City'}, ${data.country || 'Country'} • ${data.language || 'Languages'}`;
+                document.getElementById('profileRole').innerText = `Intent: ${data.role || 'Peer Progress'}`;
+                loadMembersForMatching();
             }
         }
 
-        // دالة البحث عن أعضاء الدائرة عند الضغط على الزر
-        async function findMyCircle() {
-            if (!myProfile) return;
-            const list = document.getElementById('circleMembersList');
-            list.innerHTML = `<p style="color:var(--text-muted); font-size:0.85rem; text-align:center;"><i class="fa-solid fa-spinner fa-spin"></i> Searching for matched members...</p>`;
-
-            // جلب البروفايلات المطابقة في نفس المرحلة من قاعدة البيانات
-            let { data: members, error } = await db.from('profiles')
-                .select('*')
-                .ilike('current_phase', myProfile.current_phase.trim());
-
-            if (error || !members || members.length === 0) {
-                list.innerHTML = `<p style="color:var(--text-muted); font-size:0.85rem; text-align:center;">No other members found in your phase yet.</p>`;
-                return;
-            }
-
-            // عرض الأعضاء
-            list.innerHTML = `
-                <div style="font-size:0.85rem; font-weight:bold; margin-bottom:8px; color:var(--accent-glow);">Matched Members (${members.length}):</div>
-                ${members.map(m => {
-                    const isMe = m.user_id === currentUser.id ? " (You)" : "";
-                    return `
-                    <div style="background:var(--bg-main); padding:10px 14px; border-radius:var(--radius-md); margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;">
-                        <div>
-                            <div style="font-weight:bold; font-size:0.9rem;"><i class="fa-solid fa-circle-user" style="color:var(--accent-glow); margin-right:4px;"></i> ${m.first_name}${isMe}</div>
-                            <div style="font-size:0.75rem; color:var(--text-muted);">${m.city}, ${m.country}</div>
-                        </div>
-                        <span style="font-size:0.75rem; background:var(--border); padding:4px 8px; border-radius:12px;">${m.current_phase}</span>
-                    </div>`;
-                }).join('')}
-            `;
+        function selectMood(m, btn) {
+            selectedMood = m;
+            document.querySelectorAll('.mood-btn').forEach(b => b.classList.remove('selected'));
+            btn.classList.add('selected');
         }
 
-        async function postUpdate() {
-            const text = document.getElementById('updateInput').value.trim();
-            if (!text) return alert("Please enter an update!");
+        async function postDailyUpdate() {
+            const input = document.getElementById('dailyUpdateInput');
+            if (!input.value.trim() || !userProfile) return;
 
             const { error } = await db.from('daily_updates').insert([{
                 user_id: currentUser.id,
-                user_name: myProfile ? myProfile.first_name : 'User',
-                phase_name: myProfile ? myProfile.current_phase : 'General',
-                update_text: text
+                user_name: userProfile.first_name,
+                phase_name: userProfile.current_phase,
+                mood: selectedMood,
+                update_text: input.value
             }]);
 
-            if (error) {
-                alert("Error posting: " + error.message);
-            } else {
-                document.getElementById('updateInput').value = '';
-                loadFeeds();
-            }
+            if (error) alert("Error posting: " + error.message);
+
+            input.value = '';
+            await loadFeeds();
+        }
+
+        async function postDiscussion() {
+            const title = document.getElementById('discussionTitle').value;
+            const content = document.getElementById('discussionContent').value;
+            if (!title || !content || !userProfile) return;
+
+            await db.from('discussions').insert([{
+                user_id: currentUser.id,
+                user_name: userProfile.first_name,
+                phase_name: userProfile.current_phase,
+                title: title,
+                content: content
+            }]);
+
+            document.getElementById('discussionTitle').value = '';
+            document.getElementById('discussionContent').value = '';
+            await loadDiscussions();
         }
 
         async function loadFeeds() {
-            if (!myProfile) return;
-            let { data: posts } = await db.from('daily_updates')
+            if (!userProfile) return;
+            
+            let { data: updates } = await db.from('daily_updates')
                 .select('*')
-                .ilike('phase_name', myProfile.current_phase.trim())
+                .eq('phase_name', userProfile.current_phase)
                 .order('created_at', { ascending: false });
 
-            const feed = document.getElementById('feedList');
-            if (!posts || posts.length === 0) {
-                feed.innerHTML = `<p style="color:var(--text-muted); font-size:0.85rem;">No updates in this phase yet.</p>`;
+            const container = document.getElementById('circleUpdatesStream');
+            container.innerHTML = '';
+            
+            if (updates && updates.length > 0) {
+                updates.forEach(up => {
+                    container.innerHTML += `
+                        <div class="feed-item">
+                            <div class="feed-meta">
+                                <strong>${up.user_name} • ${up.mood}</strong>
+                                <span>${new Date(up.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                            </div>
+                            <p style="font-size:0.85rem; color:var(--text-main);">${up.update_text}</p>
+                        </div>
+                    `;
+                });
+            } else {
+                container.innerHTML = `<p style="font-size:0.8rem; color:var(--text-muted); text-align:center;">No updates in this phase yet. Be the first!</p>`;
+            }
+
+            loadDiscussions();
+        }
+
+        async function loadDiscussions() {
+            if (!userProfile) return;
+
+            let { data: discussions } = await db.from('discussions')
+                .select('*')
+                .eq('phase_name', userProfile.current_phase)
+                .order('created_at', { ascending: false });
+
+            const container = document.getElementById('discussionFeed');
+            container.innerHTML = '';
+
+            if (discussions && discussions.length > 0) {
+                discussions.forEach(d => {
+                    container.innerHTML += `
+                        <div class="feed-item">
+                            <div class="feed-meta"><strong>${d.user_name}</strong></div>
+                            <h4 style="font-size:0.9rem; margin-bottom:4px;">${d.title}</h4>
+                            <p style="font-size:0.8rem; color:var(--text-muted);">${d.content}</p>
+                        </div>
+                    `;
+                });
+            } else {
+                container.innerHTML = `<p style="font-size:0.8rem; color:var(--text-muted); text-align:center;">No discussions yet.</p>`;
+            }
+        }
+
+        async function loadMembersForMatching() {
+            if (!userProfile) return;
+
+            let { data: members } = await db.from('profiles')
+                .select('*')
+                .eq('current_phase', userProfile.current_phase);
+
+            if (members) {
+                allPhaseMembers = members;
+                renderMembers(allPhaseMembers);
+            }
+        }
+
+        function renderMembers(list) {
+            const container = document.getElementById('matchedMembersList');
+            container.innerHTML = '';
+
+            if (list.length === 0) {
+                container.innerHTML = `<p style="font-size:0.8rem; color:var(--text-muted); text-align:center;">No matching members found.</p>`;
                 return;
             }
 
-            feed.innerHTML = posts.map(p => `
-                <div class="card" style="padding:12px; margin-bottom:10px;">
-                    <div style="font-weight:bold; font-size:0.85rem; color:var(--accent-glow);">${p.user_name || 'Member'}</div>
-                    <div style="font-size:0.9rem; margin-top:4px;">${p.update_text}</div>
-                </div>
-            `).join('');
+            list.forEach(m => {
+                container.innerHTML += `
+                    <div class="feed-item">
+                        <div class="feed-meta">
+                            <strong>${m.first_name} (${m.age || 'N/A'})</strong>
+                            <span class="user-tag">${m.role || 'Member'}</span>
+                        </div>
+                        <p style="font-size:0.8rem; color:var(--text-muted);"><i class="fa-solid fa-location-dot"></i> ${m.city || ''}, ${m.country || ''} | 🗣️ ${m.language || 'N/A'}</p>
+                        <p style="font-size:0.8rem; color:var(--accent-glow); margin-top:4px;">Goal: ${m.goal}</p>
+                    </div>
+                `;
+            });
+        }
+
+        function filterMembers() {
+            const country = document.getElementById('searchCountry').value.toLowerCase();
+            const city = document.getElementById('searchCity').value.toLowerCase();
+            const lang = document.getElementById('searchLang').value.toLowerCase();
+            const age = document.getElementById('searchAge').value;
+
+            const filtered = allPhaseMembers.filter(m => {
+                const matchC = !country || (m.country && m.country.toLowerCase().includes(country));
+                const matchCi = !city || (m.city && m.city.toLowerCase().includes(city));
+                const matchL = !lang || (m.language && m.language.toLowerCase().includes(lang));
+                const matchA = !age || (m.age && m.age.toString() === age);
+                return matchC && matchCi && matchL && matchA;
+            });
+
+            renderMembers(filtered);
+        }
+
+        function switchTab(tabId, btn) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            document.getElementById(`tab-${tabId}`).classList.add('active');
+            btn.classList.add('active');
         }
 
         async function logout() {
