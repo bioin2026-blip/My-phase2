@@ -29,15 +29,13 @@
         .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 16px; margin-bottom: 16px; }
 
         input, select, textarea, button { width: 100%; padding: 12px; border-radius: var(--radius-md); border: 1px solid var(--border); background: var(--bg-main); color: var(--text-main); margin-bottom: 10px; font-size: 0.9rem; }
-        button { background: var(--accent-primary); color: white; font-weight: bold; border: none; cursor: pointer; }
+        button { background: var(--accent-primary); color: white; font-weight: bold; border: none; cursor: pointer; transition: 0.2s; }
+        button:hover { opacity: 0.9; }
         
-        .nav-bar { position: fixed; bottom: 0; left: 0; right: 0; background: var(--bg-card); border-top: 1px solid var(--border); display: flex; justify-content: space-around; padding: 10px 0; }
-        .nav-item { color: var(--text-muted); text-align: center; font-size: 0.75rem; text-decoration: none; cursor: pointer; }
-        .nav-item.active { color: var(--accent-glow); }
-        .nav-item i { font-size: 1.2rem; display: block; margin-bottom: 2px; }
-
         .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(15, 23, 42, 0.95); z-index: 2000; display: flex; align-items: center; justify-content: center; padding: 16px; }
         .modal-box { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 24px; width: 100%; max-width: 400px; }
+        
+        .btn-search { background: linear-gradient(135deg, #6366f1, #818cf8); padding: 14px; font-size: 1rem; border-radius: var(--radius-md); box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3); }
     </style>
 </head>
 <body>
@@ -55,25 +53,33 @@
             <p id="displayProfileLoc" style="font-size: 0.8rem; color: var(--text-muted);"></p>
         </div>
 
-        <!-- POST DAILY UPDATE -->
+        <!-- MATCH / CIRCLE SECTION -->
+        <div class="card" style="text-align: center;">
+            <h4 style="margin-bottom: 8px; color: var(--accent-glow);"><i class="fa-solid fa-users-viewfinder"></i> Find Your Phase Circle</h4>
+            <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 14px;">Discover people who share your exact phase and location.</p>
+            
+            <!-- زر البحث عن الأشخاص -->
+            <button class="btn-search" onclick="findMyCircle()">
+                <i class="fa-solid fa-magnifying-glass"></i> Find People in My Phase
+            </button>
+
+            <!-- القائمة التي تظهر فيها النتائج بعد الضغط -->
+            <div id="circleMembersList" style="margin-top: 16px; text-align: left;"></div>
+        </div>
+
+        <!-- DAILY UPDATE SECTION -->
         <div class="card">
             <h4 style="margin-bottom:10px;">Daily Update</h4>
-            <textarea id="updateInput" placeholder="Share your update for today..." rows="3"></textarea>
+            <textarea id="updateInput" placeholder="Share your update with your phase..." rows="3"></textarea>
             <button onclick="postUpdate()">Post Update</button>
         </div>
 
-        <!-- MATCHED CIRCLE MEMBERS -->
-        <div class="card">
-            <h4 style="margin-bottom: 12px; color: var(--accent-glow);"><i class="fa-solid fa-users"></i> Members in Your Phase</h4>
-            <div id="circleMembersList">Searching for members...</div>
-        </div>
-
         <!-- FEED -->
-        <div style="font-weight: bold; margin-bottom: 10px;">Phase Feed</div>
+        <div style="font-weight: bold; margin-bottom: 10px;">Phase Activity Feed</div>
         <div id="feedList"></div>
     </main>
 
-    <!-- AUTH MODAL -->
+    <!-- AUTH MODAL (التسجيل / تسجيل الدخول) -->
     <div id="authModal" class="modal-overlay">
         <div class="modal-box">
             <h2 id="authTitle" style="color: var(--accent-glow); margin-bottom: 4px;">Sign In</h2>
@@ -113,7 +119,6 @@
         let isSignUp = false;
 
         async function initApp() {
-            // 1. التثبيت واسترجاع الجلسة
             const { data: { session } } = await db.auth.getSession();
             if (session && session.user) {
                 currentUser = session.user;
@@ -182,31 +187,41 @@
                 document.getElementById('displayProfileName').innerText = `Welcome, ${data.first_name || 'Member'} 👋`;
                 document.getElementById('displayProfilePhase').innerText = `Phase: ${data.current_phase}`;
                 document.getElementById('displayProfileLoc').innerText = `Location: ${data.city}, ${data.country}`;
-                
-                loadCircleMembers();
                 loadFeeds();
             }
         }
 
-        async function loadCircleMembers() {
+        // دالة البحث عن أعضاء الدائرة عند الضغط على الزر
+        async function findMyCircle() {
             if (!myProfile) return;
-            // البحث عن الأعضاء المطابقين في نفس المرحلة
-            let { data: members } = await db.from('profiles')
+            const list = document.getElementById('circleMembersList');
+            list.innerHTML = `<p style="color:var(--text-muted); font-size:0.85rem; text-align:center;"><i class="fa-solid fa-spinner fa-spin"></i> Searching for matched members...</p>`;
+
+            // جلب البروفايلات المطابقة في نفس المرحلة من قاعدة البيانات
+            let { data: members, error } = await db.from('profiles')
                 .select('*')
                 .ilike('current_phase', myProfile.current_phase.trim());
 
-            const list = document.getElementById('circleMembersList');
-            if (!members || members.length === 0) {
-                list.innerHTML = `<p style="color:var(--text-muted); font-size:0.85rem;">No other members in this phase yet.</p>`;
+            if (error || !members || members.length === 0) {
+                list.innerHTML = `<p style="color:var(--text-muted); font-size:0.85rem; text-align:center;">No other members found in your phase yet.</p>`;
                 return;
             }
 
-            list.innerHTML = members.map(m => {
-                const isMe = m.user_id === currentUser.id ? " (You)" : "";
-                return `<div style="background:var(--bg-main); padding:8px 12px; border-radius:8px; margin-bottom:6px; font-size:0.85rem;">
-                    <i class="fa-solid fa-user" style="color:var(--accent-glow);"></i> <b>${m.first_name}${isMe}</b> - ${m.city}, ${m.country}
-                </div>`;
-            }).join('');
+            // عرض الأعضاء
+            list.innerHTML = `
+                <div style="font-size:0.85rem; font-weight:bold; margin-bottom:8px; color:var(--accent-glow);">Matched Members (${members.length}):</div>
+                ${members.map(m => {
+                    const isMe = m.user_id === currentUser.id ? " (You)" : "";
+                    return `
+                    <div style="background:var(--bg-main); padding:10px 14px; border-radius:var(--radius-md); margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;">
+                        <div>
+                            <div style="font-weight:bold; font-size:0.9rem;"><i class="fa-solid fa-circle-user" style="color:var(--accent-glow); margin-right:4px;"></i> ${m.first_name}${isMe}</div>
+                            <div style="font-size:0.75rem; color:var(--text-muted);">${m.city}, ${m.country}</div>
+                        </div>
+                        <span style="font-size:0.75rem; background:var(--border); padding:4px 8px; border-radius:12px;">${m.current_phase}</span>
+                    </div>`;
+                }).join('')}
+            `;
         }
 
         async function postUpdate() {
