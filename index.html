@@ -21,7 +21,7 @@
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; }
-        body { background-color: var(--bg-main); color: var(--text-main); min-height: 100vh; padding-bottom: 90px; }
+        body { background-color: var(--bg-main); color: var(--text-main); min-height: 100vh; padding-bottom: calc(90px + env(safe-area-inset-bottom)); }
 
         header { background: var(--bg-card); border-bottom: 1px solid var(--border); padding: 18px 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 12px rgba(0,0,0,0.25); }
         .logo { font-weight: 700; font-size: 1.25rem; color: var(--accent-glow); display:flex; align-items:center; gap:8px; }
@@ -32,20 +32,20 @@
         .muted { color: var(--text-muted); }
 
         /* Inputs & buttons */
-        .form-control { width: 100%; padding: 14px; border-radius: var(--radius-md); border: 1px solid var(--border); background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(0,0,0,0.02)); color: var(--text-main); }
+        .form-control { width: 100%; padding: 14px; border-radius: var(--radius-md); border: 1px solid var(--border); background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(0,0,0,0.02)); color: var(--text-main); margin-bottom: 10px; }
         textarea.form-control { min-height: 88px; resize: vertical; }
 
-        .btn { display: inline-block; padding: 12px 16px; border-radius: 999px; background: linear-gradient(90deg, var(--accent-primary), var(--accent-glow)); color: white; font-weight: 700; border: none; }
+        .btn { display: inline-block; padding: 12px 16px; border-radius: 999px; background: linear-gradient(90deg, var(--accent-primary), var(--accent-glow)); color: white; font-weight: 700; border: none; cursor: pointer; }
         .btn.ghost { background: transparent; border: 1px solid var(--border); color: var(--text-main); }
 
-        .nav-bar { position: fixed; bottom: 0; left: 0; right: 0; background: var(--bg-card); border-top: 1px solid var(--border); display: flex; justify-content: space-around; padding: 12px 0; }
+        .nav-bar { position: fixed; bottom: 0; left: 0; right: 0; background: var(--bg-card); border-top: 1px solid var(--border); display: flex; justify-content: space-around; padding: 12px 12px; padding-bottom: calc(12px + env(safe-area-inset-bottom)); z-index: 50; }
         .nav-item { color: var(--text-muted); text-align: center; font-size: 0.75rem; text-decoration: none; cursor: pointer; }
         .nav-item.active { color: var(--accent-glow); }
         .nav-item i { font-size: 1.2rem; display: block; margin-bottom: 4px; }
 
         /* Modal / Onboarding */
-        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(2,6,23,0.7); z-index: 2000; display: flex; align-items: center; justify-content: center; padding: 24px; }
-        .modal-box { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 28px; width: 100%; max-width: 520px; box-shadow: var(--shadow-soft); transform: none; }
+        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(2,6,23,0.7); z-index: 2000; display: flex; align-items: flex-start; justify-content: center; padding: 24px 12px; overflow-y: auto; }
+        .modal-box { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 28px; width: 100%; max-width: 520px; box-shadow: var(--shadow-soft); max-height: calc(100vh - 48px); overflow-y: auto; }
 
         .onboard-header { margin-bottom: 8px; }
         .onboard-title { font-size: 1.35rem; color: var(--accent-glow); font-weight: 800; margin-bottom: 6px; }
@@ -61,80 +61,17 @@
         .field-row { display:flex; gap: 10px; }
         .field-row .form-control { flex:1; }
 
-        /* responsive */
         @media (max-width: 520px) {
             main { padding: 14px; margin: 12px; }
             .modal-box { padding: 18px; }
         }
-
-        /* --- Mobile fixes: make modal and page scrollable and respect safe-area --- */
-        /* اجعل المسافة السفلية تأخذ بالحسبان safe-area (شاشات iOS/Android الحديثة) */
-        body {
-          /* keep previous values but ensure safe-area accounted for */
-          padding-bottom: calc(90px + env(safe-area-inset-bottom));
-        }
-
-        /* تأكد أن شريط التنقل أسفل يأخذ safe-area ويظل مرئي */
-        .nav-bar {
-          position: fixed;
-          bottom: 0;
-          left: 0;
-          right: 0;
-          background: var(--bg-card);
-          border-top: 1px solid var(--border);
-          display: flex;
-          justify-content: space-around;
-          padding: 12px 12px;
-          padding-bottom: calc(12px + env(safe-area-inset-bottom));
-          z-index: 50;
-        }
-
-        /* اجعل المودال قابلًا للتمرير عند امتلاءه على شاشات صغيرة */
-        .modal-overlay {
-          position: fixed;
-          top: 0;
-          left: 0;
-          right: 0;
-          bottom: 0;
-          background: rgba(2,6,23,0.7);
-          z-index: 2000;
-          display: flex;
-          align-items: flex-start; /* start at top so it can scroll */
-          justify-content: center;
-          padding: 24px 12px;
-          overflow-y: auto; /* important: allow scrolling if content taller than viewport */
-        }
-
-        .modal-box {
-          background: var(--bg-card);
-          border: 1px solid var(--border);
-          border-radius: var(--radius-lg);
-          padding: 28px;
-          width: 100%;
-          max-width: 520px;
-          box-shadow: var(--shadow-soft);
-          transform: none;
-          /* cap modal height and allow internal scroll */
-          max-height: calc(100vh - 48px);
-          overflow-y: auto;
-          /* ensure enough bottom padding so buttons inside modal are not hidden by fixed nav-bar */
-          padding-bottom: calc(120px + env(safe-area-inset-bottom));
-        }
-
-        /* Optional: make action buttons inside modal easier to reach (they will scroll above nav when sticky) */
-        .modal-box .sticky-action {
-          position: sticky;
-          bottom: calc(18px + env(safe-area-inset-bottom));
-          background: transparent;
-        }
-
     </style>
 </head>
 <body>
 
     <header>
         <div class="logo"><i class="fa-solid fa-compass"></i> MyPhase</div>
-        <button onclick="logout()" style="width:auto; padding:8px 14px; margin:0; font-size:0.9rem; background:var(--border); border-radius:999px;">Sign Out</button>
+        <button onclick="logout()" style="width:auto; padding:8px 14px; margin:0; font-size:0.9rem; background:var(--border); color:white; border:none; border-radius:999px; cursor:pointer;">Sign Out</button>
     </header>
 
     <main>
@@ -251,18 +188,17 @@
                         <option>More than 12 Months</option>
                     </select>
 
-                    <label style="font-size:0.9rem; color:var(--text-muted); margin-bottom:6px; display:block; margin-top:6px;">Why did you join MyPhase? <span class="muted" style="font-size:0.85rem;"></label>
+                    <label style="font-size:0.9rem; color:var(--text-muted); margin-bottom:6px; display:block; margin-top:6px;">Why did you join MyPhase?</label>
                     <textarea id="reason" class="form-control" placeholder="Write a few words..."></textarea>
 
                     <div style="display:flex; gap:10px; margin-top:10px;">
                         <button type="button" class="btn ghost" onclick="backToStep1()">← Back</button>
-                        <button type="submit" class="btn sticky-action" style="flex:1">Create MyPhase Account</button>
+                        <button type="submit" class="btn" style="flex:1">Create MyPhase Account</button>
                     </div>
                 </form>
-
             </div>
 
-            <!-- Sign in view (overlay within modal) -->
+            <!-- Sign in view -->
             <div id="signInView" style="display:none; margin-top:6px;">
                 <div class="onboard-header">
                     <div class="onboard-title">Sign In</div>
@@ -277,7 +213,6 @@
                         <button type="submit" class="btn" style="flex:1">Sign In</button>
                     </div>
                 </form>
-
             </div>
 
         </div>
@@ -285,7 +220,7 @@
 
     <script>
         const SUPABASE_URL = "https://liovctvovsyyzcwfjhob.supabase.co";
-        const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxpb3ZjdHZvdnN5eXpjd2ZqaG9iIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU0NjYyMzQsImV4cCI6MjEwMTA0MjIzNH0.[REDACTED]";
+        const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxpb3ZjdHZvdnN5eXpjd2ZqaG9iIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU0NjYyMzQsImV4cCI6MjEwMTA0MjIzNH0.wK8klwR4K7m2TOF3Qmi1QqprLdLSZJt5T205LTRU8ws";
         const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         let currentUser = null;
@@ -293,7 +228,6 @@
         let onboardingData = {};
 
         async function initApp() {
-            // Restore session and set up auth listener
             const { data: { session } } = await db.auth.getSession();
             if (session && session.user) {
                 currentUser = session.user;
@@ -326,7 +260,6 @@
             document.getElementById('step2').style.display = n === 2 ? 'block' : 'none';
             document.getElementById('step1Pill').classList.toggle('active', n === 1);
             document.getElementById('step2Pill').classList.toggle('active', n === 2);
-            // reset signIn view while onboarding
             document.getElementById('signInView').style.display = 'none';
         }
 
@@ -347,7 +280,6 @@
             showStep(1);
         }
 
-        // STEP 1 handler
         async function handleStep1(e) {
             e.preventDefault();
             const firstName = document.getElementById('firstName').value.trim();
@@ -363,13 +295,10 @@
             onboardingData.email = email;
             onboardingData.password = password;
 
-            // Proceed to step 2
             showStep(2);
-            // Prefill some fields with defaults if desired
             document.getElementById('country').focus();
         }
 
-        // STEP 2 handler
         async function handleStep2(e) {
             e.preventDefault();
 
@@ -385,7 +314,6 @@
             if (phase === 'Other...' && !otherPhase) return alert('Please enter your phase.');
             if (phase === 'Other...') phase = otherPhase;
 
-            // Save to onboardingData
             onboardingData.country = country;
             onboardingData.city = city;
             onboardingData.current_phase = phase;
@@ -393,16 +321,13 @@
             onboardingData.duration = duration;
             onboardingData.reason = reason;
 
-            // Create account and profile in Supabase
             try {
-                // Sign up the user
                 const { data: signData, error: signError } = await db.auth.signUp({
                     email: onboardingData.email,
                     password: onboardingData.password
                 });
                 if (signError) throw signError;
 
-                // If user object present (immediate creation), use it. Otherwise wait for onAuthStateChange to populate currentUser.
                 let userId = null;
                 if (signData && signData.user) {
                     userId = signData.user.id;
@@ -410,14 +335,11 @@
                     userId = signData.session.user.id;
                 }
 
-                // If we don't have userId yet, try to fetch session
                 if (!userId) {
                     const { data: { session } } = await db.auth.getSession();
                     if (session && session.user) userId = session.user.id;
                 }
 
-                // Insert profile record
-                // created_at will be set here; you can also rely on DB default timestamp if configured
                 const profile = {
                     user_id: userId,
                     first_name: onboardingData.first_name || 'Member',
@@ -434,20 +356,15 @@
                 const { error: insertError } = await db.from('profiles').insert([profile]);
                 if (insertError) throw insertError;
 
-                // Hide modal and load profile if signed in
                 document.getElementById('authModal').style.display = 'none';
 
-                // If the signUp didn't sign user in (email confirm flow), attempt to sign in automatically
                 if (!currentUser) {
-                    // try to sign in with password
                     const { data: signInData, error: signInError } = await db.auth.signInWithPassword({
                         email: onboardingData.email,
                         password: onboardingData.password
                     });
                     if (signInError) {
-                        // Not fatal: many Supabase projects require email confirmation. Inform the user.
                         alert('Account created. Please check your email to confirm your account and then sign in.');
-                        // Still attempt to load profile if session available
                     } else {
                         currentUser = signInData.user;
                     }
@@ -461,7 +378,6 @@
             }
         }
 
-        // Sign in handler
         async function handleSignIn(e) {
             e.preventDefault();
             const email = document.getElementById('signinEmail').value.trim();
@@ -475,7 +391,6 @@
             await loadUserProfile();
         }
 
-        // Show/hide otherPhase field
         document.addEventListener('change', (e) => {
             if (e.target && e.target.id === 'phaseSelect') {
                 const val = e.target.value;
@@ -497,7 +412,6 @@
                     loadCircleMembers();
                     loadFeeds();
                 } else {
-                    // no profile found yet
                     document.getElementById('displayProfileName').innerText = `Welcome 👋`;
                     document.getElementById('displayProfilePhase').innerText = ``;
                     document.getElementById('displayProfileLoc').innerText = ``;
@@ -574,7 +488,6 @@
             location.reload();
         }
 
-        // Initialize app
         initApp();
     </script>
 </body>
