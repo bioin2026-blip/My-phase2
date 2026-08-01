@@ -16,50 +16,81 @@
             --text-muted: #94a3b8;
             --border: #334155;
             --radius-lg: 16px;
-            --radius-md: 10px;
+            --radius-md: 12px;
+            --shadow-soft: 0 6px 18px rgba(2,6,23,0.6);
         }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
-        body { background-color: var(--bg-main); color: var(--text-main); min-height: 100vh; padding-bottom: 70px; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; }
+        body { background-color: var(--bg-main); color: var(--text-main); min-height: 100vh; padding-bottom: 90px; }
 
-        header { background: var(--bg-card); border-bottom: 1px solid var(--border); padding: 14px 16px; display: flex; justify-content: space-between; align-items: center; }
-        .logo { font-weight: bold; font-size: 1.2rem; color: var(--accent-glow); }
+        header { background: var(--bg-card); border-bottom: 1px solid var(--border); padding: 18px 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: var(--shadow-soft); }
+        .logo { font-weight: 700; font-size: 1.25rem; color: var(--accent-glow); display:flex; align-items:center; gap:8px; }
 
-        main { padding: 16px; max-width: 600px; margin: 0 auto; }
-        .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 16px; margin-bottom: 16px; }
+        main { padding: 20px; max-width: 760px; margin: 20px auto; }
+        .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 18px; margin-bottom: 18px; box-shadow: 0 4px 14px rgba(2,6,23,0.45); }
 
-        input, select, textarea, button { width: 100%; padding: 12px; border-radius: var(--radius-md); border: 1px solid var(--border); background: var(--bg-main); color: var(--text-main); margin-bottom: 10px; font-size: 0.9rem; }
-        button { background: var(--accent-primary); color: white; font-weight: bold; border: none; cursor: pointer; }
-        
-        .nav-bar { position: fixed; bottom: 0; left: 0; right: 0; background: var(--bg-card); border-top: 1px solid var(--border); display: flex; justify-content: space-around; padding: 10px 0; }
+        .muted { color: var(--text-muted); }
+
+        /* Inputs & buttons */
+        .form-control { width: 100%; padding: 14px; border-radius: var(--radius-md); border: 1px solid var(--border); background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(0,0,0,0.02)); color: var(--text-main); margin-bottom: 12px; font-size: 0.95rem; }
+        textarea.form-control { min-height: 88px; resize: vertical; }
+
+        .btn { display: inline-block; padding: 12px 16px; border-radius: 999px; background: linear-gradient(90deg, var(--accent-primary), var(--accent-glow)); color: white; font-weight: 700; border: none; cursor: pointer; box-shadow: 0 8px 24px rgba(99,102,241,0.12); }
+        .btn.ghost { background: transparent; border: 1px solid var(--border); color: var(--text-main); }
+
+        .nav-bar { position: fixed; bottom: 0; left: 0; right: 0; background: var(--bg-card); border-top: 1px solid var(--border); display: flex; justify-content: space-around; padding: 12px 0; }
         .nav-item { color: var(--text-muted); text-align: center; font-size: 0.75rem; text-decoration: none; cursor: pointer; }
         .nav-item.active { color: var(--accent-glow); }
-        .nav-item i { font-size: 1.2rem; display: block; margin-bottom: 2px; }
+        .nav-item i { font-size: 1.2rem; display: block; margin-bottom: 4px; }
 
-        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(15, 23, 42, 0.95); z-index: 2000; display: flex; align-items: center; justify-content: center; padding: 16px; }
-        .modal-box { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 24px; width: 100%; max-width: 400px; }
+        /* Modal / Onboarding */
+        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(2,6,23,0.7); z-index: 2000; display: flex; align-items: center; justify-content: center; padding: 20px; }
+        .modal-box { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 28px; width: 100%; max-width: 520px; box-shadow: var(--shadow-soft); transform: translateY(0); transition: transform .28s ease, opacity .28s ease; }
+
+        .onboard-header { margin-bottom: 8px; }
+        .onboard-title { font-size: 1.35rem; color: var(--accent-glow); font-weight: 800; margin-bottom: 6px; }
+        .onboard-sub { color: var(--text-muted); font-size: 0.95rem; margin-bottom: 18px; }
+
+        .step-indicator { display:flex; gap:8px; align-items:center; margin-bottom: 10px; }
+        .step-pill { background: rgba(255,255,255,0.02); padding:6px 10px; border-radius: 999px; font-size: 0.85rem; color: var(--text-muted); }
+        .step-pill.active { background: linear-gradient(90deg, rgba(99,102,241,0.12), rgba(129,140,248,0.08)); color: var(--accent-glow); font-weight:700; }
+
+        .small-note { font-size: 0.85rem; color: var(--text-muted); margin-top: 8px; text-align:center; }
+        .link { color: var(--accent-glow); font-weight:700; cursor:pointer; }
+
+        .field-row { display:flex; gap: 10px; }
+        .field-row .form-control { flex:1; }
+
+        /* responsive */
+        @media (max-width: 520px) {
+            main { padding: 14px; margin: 12px; }
+            .modal-box { padding: 18px; }
+        }
     </style>
 </head>
 <body>
 
     <header>
         <div class="logo"><i class="fa-solid fa-compass"></i> MyPhase</div>
-        <button onclick="logout()" style="width:auto; padding:6px 12px; margin:0; font-size:0.8rem; background:var(--border);">Sign Out</button>
+        <button onclick="logout()" style="width:auto; padding:8px 14px; margin:0; font-size:0.9rem; background:var(--border); border-radius:999px;">Sign Out</button>
     </header>
 
     <main>
         <!-- PROFILE SUMMARY -->
         <div class="card">
             <h3 id="displayProfileName">Loading profile...</h3>
-            <p id="displayProfilePhase" style="font-size: 0.85rem; color: var(--accent-glow); margin-top:4px;"></p>
-            <p id="displayProfileLoc" style="font-size: 0.8rem; color: var(--text-muted);"></p>
+            <p id="displayProfilePhase" style="font-size: 0.95rem; color: var(--accent-glow); margin-top:6px;"></p>
+            <p id="displayProfileLoc" style="font-size: 0.9rem; color: var(--text-muted);"></p>
         </div>
 
         <!-- POST DAILY UPDATE -->
         <div class="card">
-            <h4 style="margin-bottom:10px;">Daily Update</h4>
-            <textarea id="updateInput" placeholder="Share your update for today..." rows="3"></textarea>
-            <button onclick="postUpdate()">Post Update</button>
+            <h4 style="margin-bottom:12px;">Daily Update</h4>
+            <textarea id="updateInput" class="form-control" placeholder="Share your update for today..." rows="3"></textarea>
+            <div style="display:flex; gap:12px; margin-top:8px;">
+                <button class="btn" onclick="postUpdate()">Post Update</button>
+                <button class="btn ghost" onclick="document.getElementById('updateInput').value=''">Clear</button>
+            </div>
         </div>
 
         <!-- MATCHED CIRCLE MEMBERS -->
@@ -69,58 +100,145 @@
         </div>
 
         <!-- FEED -->
-        <div style="font-weight: bold; margin-bottom: 10px;">Phase Feed</div>
+        <div style="font-weight: 700; margin-bottom: 10px;">Phase Feed</div>
         <div id="feedList"></div>
     </main>
 
-    <!-- AUTH MODAL -->
-    <div id="authModal" class="modal-overlay">
-        <div class="modal-box">
-            <h2 id="authTitle" style="color: var(--accent-glow); margin-bottom: 4px;">Sign In</h2>
-            <p id="authSub" style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px;">Welcome back! Enter your details.</p>
+    <!-- AUTH / ONBOARDING MODAL -->
+    <div id="authModal" class="modal-overlay" style="display:none;">
+        <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="onboardTitle">
+            <!-- Step indicator -->
+            <div class="step-indicator">
+                <div id="step1Pill" class="step-pill active">1 — Welcome</div>
+                <div id="step2Pill" class="step-pill">2 — Your Phase</div>
+            </div>
 
-            <form onsubmit="handleAuth(event)">
-                <input type="email" id="authEmail" placeholder="Email" required>
-                <input type="password" id="authPassword" placeholder="Password" required minlength="6">
-                
-                <div id="signUpFields" style="display: none;">
-                    <input type="text" id="obName" placeholder="First Name">
-                    <div style="display: flex; gap: 6px;">
-                        <input type="text" id="obCountry" placeholder="Country" value="Sudan">
-                        <input type="text" id="obCity" placeholder="City" value="Khartoum">
-                    </div>
-                    <label style="font-size: 0.75rem; color: var(--text-muted);">Current Phase:</label>
-                    <input type="text" id="obPhase" placeholder="e.g. new city, starting startup" value="new city">
+            <!-- Step 1 -->
+            <div id="step1" class="onboard-step">
+                <div class="onboard-header">
+                    <div id="onboardTitle" class="onboard-title">Welcome to MyPhase</div>
+                    <div class="onboard-sub">You are not your permanent identity. You are living a phase.</div>
                 </div>
 
-                <button type="submit" id="authBtn">Sign In</button>
-            </form>
+                <form id="step1Form" onsubmit="handleStep1(event)">
+                    <input id="firstName" class="form-control" type="text" placeholder="First Name" required>
+                    <input id="signupEmail" class="form-control" type="email" placeholder="Email" required>
+                    <input id="signupPassword" class="form-control" type="password" placeholder="Password" minlength="6" required>
+                    <input id="signupConfirm" class="form-control" type="password" placeholder="Confirm Password" minlength="6" required>
 
-            <p style="text-align: center; font-size: 0.8rem; color: var(--text-muted); margin-top: 12px;">
-                <span id="toggleText">Don't have an account?</span> 
-                <a href="#" onclick="toggleAuthMode(event)" id="toggleLink" style="color: var(--accent-glow); font-weight: bold;">Create Account</a>
-            </p>
+                    <div style="display:flex; gap:10px; margin-top:6px;">
+                        <button type="submit" class="btn" style="flex:1">Continue →</button>
+                    </div>
+                </form>
+
+                <p class="small-note">Already have an account? <span class="link" onclick="showSignIn()">Sign In</span></p>
+            </div>
+
+            <!-- Step 2 -->
+            <div id="step2" class="onboard-step" style="display:none;">
+                <div class="onboard-header">
+                    <div class="onboard-title">Tell us about your current phase</div>
+                    <div class="onboard-sub">This helps us show you meaningful members and updates.</div>
+                </div>
+
+                <form id="step2Form" onsubmit="handleStep2(event)">
+                    <div class="field-row">
+                        <input id="country" class="form-control" type="text" placeholder="Country" required>
+                        <input id="city" class="form-control" type="text" placeholder="City" required>
+                    </div>
+
+                    <label style="font-size:0.9rem; color:var(--text-muted); margin-bottom:6px; display:block;">Current Phase</label>
+                    <select id="phaseSelect" class="form-control" required>
+                        <option value="">Select a phase...</option>
+                        <option>Career Change</option>
+                        <option>Starting a Startup</option>
+                        <option>Learning Programming</option>
+                        <option>Learning English</option>
+                        <option>University / College</option>
+                        <option>Financial Goal</option>
+                        <option>Fitness Journey</option>
+                        <option>Health Recovery</option>
+                        <option>Mental Health</option>
+                        <option>Breaking a Habit</option>
+                        <option>Relationship</option>
+                        <option>Divorce Recovery</option>
+                        <option>New Parent</option>
+                        <option>Moving to a New City</option>
+                        <option>Immigration</option>
+                        <option>Grief Recovery</option>
+                        <option>Creative Project</option>
+                        <option>Business Growth</option>
+                        <option>Personal Development</option>
+                        <option>Travel Preparation</option>
+                        <option>Other...</option>
+                    </select>
+
+                    <input id="otherPhase" class="form-control" type="text" placeholder="Enter your phase" style="display:none;">
+
+                    <label style="font-size:0.9rem; color:var(--text-muted); margin-bottom:6px; display:block;">My Goal</label>
+                    <textarea id="goal" class="form-control" placeholder="Describe what you want to achieve during this phase..." required></textarea>
+
+                    <label style="font-size:0.9rem; color:var(--text-muted); margin-bottom:6px; display:block; margin-top:6px;">Expected Duration</label>
+                    <select id="duration" class="form-control" required>
+                        <option value="">Choose duration...</option>
+                        <option>1 Month</option>
+                        <option>3 Months</option>
+                        <option>6 Months</option>
+                        <option>9 Months</option>
+                        <option>12 Months</option>
+                        <option>More than 12 Months</option>
+                    </select>
+
+                    <label style="font-size:0.9rem; color:var(--text-muted); margin-bottom:6px; display:block; margin-top:6px;">Why did you join MyPhase? <span class="muted" style="font-size:0.85rem;">(optional)</span></label>
+                    <textarea id="reason" class="form-control" placeholder="Write a few words..."></textarea>
+
+                    <div style="display:flex; gap:10px; margin-top:10px;">
+                        <button type="button" class="btn ghost" onclick="backToStep1()">← Back</button>
+                        <button type="submit" class="btn" style="flex:1">Create MyPhase Account</button>
+                    </div>
+                </form>
+
+            </div>
+
+            <!-- Sign in view (overlay within modal) -->
+            <div id="signInView" style="display:none; margin-top:6px;">
+                <div class="onboard-header">
+                    <div class="onboard-title">Sign In</div>
+                    <div class="onboard-sub">Welcome back — enter your details to continue.</div>
+                </div>
+
+                <form id="signInForm" onsubmit="handleSignIn(event)">
+                    <input id="signinEmail" class="form-control" type="email" placeholder="Email" required>
+                    <input id="signinPassword" class="form-control" type="password" placeholder="Password" required>
+                    <div style="display:flex; gap:10px; margin-top:6px;">
+                        <button type="button" class="btn ghost" onclick="showCreateFromSignIn()">Create Account</button>
+                        <button type="submit" class="btn" style="flex:1">Sign In</button>
+                    </div>
+                </form>
+
+            </div>
+
         </div>
     </div>
 
     <script>
         const SUPABASE_URL = "https://liovctvovsyyzcwfjhob.supabase.co";
-        const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxpb3ZjdHZvdnN5eXpjd2ZqaG9iIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU0NjYyMzQsImV4cCI6MjEwMTA0MjIzNH0.wK8klwR4K7m2TOF3Qmi1QqprLdLSZJt5T205LTRU8ws";
+        const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxpb3ZjdHZvdnN5eXpjd2ZqaG9iIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU0NjYyMzQsImV4cCI6MjEwMTA0MjIzNH0.wK8kl[...]";
         const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         let currentUser = null;
         let myProfile = null;
-        let isSignUp = false;
+        let onboardingData = {};
 
         async function initApp() {
-            // 1. التثبيت واسترجاع الجلسة
+            // Restore session and set up auth listener
             const { data: { session } } = await db.auth.getSession();
             if (session && session.user) {
                 currentUser = session.user;
                 await loadUserProfile();
                 document.getElementById('authModal').style.display = 'none';
             } else {
-                document.getElementById('authModal').style.display = 'flex';
+                showAuthModal();
             }
 
             db.auth.onAuthStateChange(async (event, session) => {
@@ -130,88 +248,228 @@
                     document.getElementById('authModal').style.display = 'none';
                 } else {
                     currentUser = null;
-                    document.getElementById('authModal').style.display = 'flex';
+                    showAuthModal();
                 }
             });
         }
 
-        function toggleAuthMode(e) {
-            if(e) e.preventDefault();
-            isSignUp = !isSignUp;
-            document.getElementById('signUpFields').style.display = isSignUp ? 'block' : 'none';
-            document.getElementById('authTitle').innerText = isSignUp ? "Create Account" : "Sign In";
-            document.getElementById('authBtn').innerText = isSignUp ? "Sign Up" : "Sign In";
-            document.getElementById('toggleText').innerText = isSignUp ? "Already have an account?" : "Don't have an account?";
-            document.getElementById('toggleLink').innerText = isSignUp ? "Sign In" : "Create Account";
+        function showAuthModal() {
+            document.getElementById('authModal').style.display = 'flex';
+            showStep(1);
+            document.getElementById('signInView').style.display = 'none';
         }
 
-        async function handleAuth(e) {
+        function showStep(n) {
+            document.getElementById('step1').style.display = n === 1 ? 'block' : 'none';
+            document.getElementById('step2').style.display = n === 2 ? 'block' : 'none';
+            document.getElementById('step1Pill').classList.toggle('active', n === 1);
+            document.getElementById('step2Pill').classList.toggle('active', n === 2);
+            // reset signIn view while onboarding
+            document.getElementById('signInView').style.display = 'none';
+        }
+
+        function showSignIn() {
+            document.getElementById('signInView').style.display = 'block';
+            document.getElementById('step1').style.display = 'none';
+            document.getElementById('step2').style.display = 'none';
+            document.getElementById('step1Pill').classList.remove('active');
+            document.getElementById('step2Pill').classList.remove('active');
+        }
+
+        function showCreateFromSignIn() {
+            document.getElementById('signInView').style.display = 'none';
+            showStep(1);
+        }
+
+        function backToStep1() {
+            showStep(1);
+        }
+
+        // STEP 1 handler
+        async function handleStep1(e) {
             e.preventDefault();
-            const email = document.getElementById('authEmail').value.trim();
-            const password = document.getElementById('authPassword').value;
+            const firstName = document.getElementById('firstName').value.trim();
+            const email = document.getElementById('signupEmail').value.trim();
+            const password = document.getElementById('signupPassword').value;
+            const confirm = document.getElementById('signupConfirm').value;
 
-            if (isSignUp) {
-                let { data, error } = await db.auth.signUp({ email, password });
-                if (error) return alert("Error: " + error.message);
-                if (data.user) {
-                    currentUser = data.user;
-                    await db.from('profiles').insert([{
-                        user_id: currentUser.id,
-                        first_name: document.getElementById('obName').value || 'User',
-                        email: email,
-                        country: document.getElementById('obCountry').value || 'Global',
-                        city: document.getElementById('obCity').value || 'City',
-                        current_phase: document.getElementById('obPhase').value.trim().toLowerCase()
-                    }]);
-                }
-            } else {
-                let { data, error } = await db.auth.signInWithPassword({ email, password });
-                if (error) return alert("Error logging in: " + error.message);
-                currentUser = data.user;
-            }
+            if (!firstName || !email || !password) return alert('Please complete all required fields.');
+            if (password.length < 6) return alert('Password must be at least 6 characters.');
+            if (password !== confirm) return alert('Passwords do not match.');
 
-            await loadUserProfile();
-            document.getElementById('authModal').style.display = 'none';
+            onboardingData.first_name = firstName;
+            onboardingData.email = email;
+            onboardingData.password = password;
+
+            // Proceed to step 2
+            showStep(2);
+            // Prefill some fields with defaults if desired
+            document.getElementById('country').focus();
         }
+
+        // STEP 2 handler
+        async function handleStep2(e) {
+            e.preventDefault();
+
+            const country = document.getElementById('country').value.trim();
+            const city = document.getElementById('city').value.trim();
+            let phase = document.getElementById('phaseSelect').value;
+            const otherPhase = document.getElementById('otherPhase').value.trim();
+            const goal = document.getElementById('goal').value.trim();
+            const duration = document.getElementById('duration').value;
+            const reason = document.getElementById('reason').value.trim();
+
+            if (!country || !city || !phase || !goal || !duration) return alert('Please complete all required fields.');
+            if (phase === 'Other...' && !otherPhase) return alert('Please enter your phase.');
+            if (phase === 'Other...') phase = otherPhase;
+
+            // Save to onboardingData
+            onboardingData.country = country;
+            onboardingData.city = city;
+            onboardingData.current_phase = phase;
+            onboardingData.goal = goal;
+            onboardingData.duration = duration;
+            onboardingData.reason = reason;
+
+            // Create account and profile in Supabase
+            try {
+                // Sign up the user
+                const { data: signData, error: signError } = await db.auth.signUp({
+                    email: onboardingData.email,
+                    password: onboardingData.password
+                });
+                if (signError) throw signError;
+
+                // If user object present (immediate creation), use it. Otherwise wait for onAuthStateChange to populate currentUser.
+                let userId = null;
+                if (signData && signData.user) {
+                    userId = signData.user.id;
+                } else if (signData && signData.session && signData.session.user) {
+                    userId = signData.session.user.id;
+                }
+
+                // If we don't have userId yet, try to fetch session
+                if (!userId) {
+                    const { data: { session } } = await db.auth.getSession();
+                    if (session && session.user) userId = session.user.id;
+                }
+
+                // Insert profile record
+                // created_at will be set here; you can also rely on DB default timestamp if configured
+                const profile = {
+                    user_id: userId,
+                    first_name: onboardingData.first_name || 'Member',
+                    email: onboardingData.email,
+                    country: onboardingData.country,
+                    city: onboardingData.city,
+                    current_phase: onboardingData.current_phase,
+                    goal: onboardingData.goal,
+                    duration: onboardingData.duration,
+                    reason: onboardingData.reason || null,
+                    created_at: new Date().toISOString()
+                };
+
+                const { error: insertError } = await db.from('profiles').insert([profile]);
+                if (insertError) throw insertError;
+
+                // Hide modal and load profile if signed in
+                document.getElementById('authModal').style.display = 'none';
+
+                // If the signUp didn't sign user in (email confirm flow), attempt to sign in automatically
+                if (!currentUser) {
+                    // try to sign in with password
+                    const { data: signInData, error: signInError } = await db.auth.signInWithPassword({
+                        email: onboardingData.email,
+                        password: onboardingData.password
+                    });
+                    if (signInError) {
+                        // Not fatal: many Supabase projects require email confirmation. Inform the user.
+                        alert('Account created. Please check your email to confirm your account and then sign in.');
+                        // Still attempt to load profile if session available
+                    } else {
+                        currentUser = signInData.user;
+                    }
+                }
+
+                await loadUserProfile();
+
+            } catch (err) {
+                console.error(err);
+                alert('Error creating account: ' + (err.message || JSON.stringify(err)));
+            }
+        }
+
+        // Sign in handler
+        async function handleSignIn(e) {
+            e.preventDefault();
+            const email = document.getElementById('signinEmail').value.trim();
+            const password = document.getElementById('signinPassword').value;
+            if (!email || !password) return alert('Please enter your email and password.');
+
+            const { data, error } = await db.auth.signInWithPassword({ email, password });
+            if (error) return alert('Error signing in: ' + error.message);
+            currentUser = data.user;
+            document.getElementById('authModal').style.display = 'none';
+            await loadUserProfile();
+        }
+
+        // Show/hide otherPhase field
+        document.addEventListener('change', (e) => {
+            if (e.target && e.target.id === 'phaseSelect') {
+                const val = e.target.value;
+                document.getElementById('otherPhase').style.display = val === 'Other...' ? 'block' : 'none';
+            }
+        });
 
         async function loadUserProfile() {
             if (!currentUser) return;
-            let { data } = await db.from('profiles').select('*').eq('user_id', currentUser.id).single();
-            if (data) {
-                myProfile = data;
-                document.getElementById('displayProfileName').innerText = `Welcome, ${data.first_name || 'Member'} 👋`;
-                document.getElementById('displayProfilePhase').innerText = `Phase: ${data.current_phase}`;
-                document.getElementById('displayProfileLoc').innerText = `Location: ${data.city}, ${data.country}`;
-                
-                loadCircleMembers();
-                loadFeeds();
+            try {
+                let { data, error } = await db.from('profiles').select('*').eq('user_id', currentUser.id).maybeSingle();
+                if (error) return console.error('Profile fetch error', error.message);
+                if (data) {
+                    myProfile = data;
+                    document.getElementById('displayProfileName').innerText = `Welcome, ${data.first_name || 'Member'} 👋`;
+                    document.getElementById('displayProfilePhase').innerText = `Phase: ${data.current_phase || ''}`;
+                    document.getElementById('displayProfileLoc').innerText = `Location: ${data.city || ''}, ${data.country || ''}`;
+
+                    loadCircleMembers();
+                    loadFeeds();
+                } else {
+                    // no profile found yet
+                    document.getElementById('displayProfileName').innerText = `Welcome 👋`;
+                    document.getElementById('displayProfilePhase').innerText = ``;
+                    document.getElementById('displayProfileLoc').innerText = ``;
+                }
+            } catch (err) {
+                console.error(err);
             }
         }
 
         async function loadCircleMembers() {
             if (!myProfile) return;
-            // البحث عن الأعضاء المطابقين في نفس المرحلة
-            let { data: members } = await db.from('profiles')
+            let { data: members, error } = await db.from('profiles')
                 .select('*')
-                .ilike('current_phase', myProfile.current_phase.trim());
+                .ilike('current_phase', myProfile.current_phase || '');
 
             const list = document.getElementById('circleMembersList');
             if (!members || members.length === 0) {
-                list.innerHTML = `<p style="color:var(--text-muted); font-size:0.85rem;">No other members in this phase yet.</p>`;
+                list.innerHTML = `<p style="color:var(--text-muted); font-size:0.95rem;">No other members in this phase yet.</p>`;
                 return;
             }
 
             list.innerHTML = members.map(m => {
-                const isMe = m.user_id === currentUser.id ? " (You)" : "";
-                return `<div style="background:var(--bg-main); padding:8px 12px; border-radius:8px; margin-bottom:6px; font-size:0.85rem;">
-                    <i class="fa-solid fa-user" style="color:var(--accent-glow);"></i> <b>${m.first_name}${isMe}</b> - ${m.city}, ${m.country}
+                const isMe = m.user_id === currentUser?.id ? " (You)" : "";
+                return `<div style="background:var(--bg-main); padding:12px 14px; border-radius:12px; margin-bottom:8px; font-size:0.95rem; display:flex; gap:12px; align-items:center;">
+                    <i class="fa-solid fa-user" style="color:var(--accent-glow); font-size:1.05rem;"></i>
+                    <div><div style="font-weight:700;">${m.first_name || 'Member'}${isMe}</div><div style="color:var(--text-muted); font-size:0.9rem;">${m.city || ''}, ${m.country || ''}</div></div>
                 </div>`;
             }).join('');
         }
 
         async function postUpdate() {
             const text = document.getElementById('updateInput').value.trim();
-            if (!text) return alert("Please enter an update!");
+            if (!text) return alert('Please enter an update!');
+            if (!currentUser) return alert('Please sign in first.');
 
             const { error } = await db.from('daily_updates').insert([{
                 user_id: currentUser.id,
@@ -221,7 +479,7 @@
             }]);
 
             if (error) {
-                alert("Error posting: " + error.message);
+                alert('Error posting: ' + error.message);
             } else {
                 document.getElementById('updateInput').value = '';
                 loadFeeds();
@@ -230,21 +488,21 @@
 
         async function loadFeeds() {
             if (!myProfile) return;
-            let { data: posts } = await db.from('daily_updates')
+            let { data: posts, error } = await db.from('daily_updates')
                 .select('*')
-                .ilike('phase_name', myProfile.current_phase.trim())
+                .ilike('phase_name', myProfile.current_phase || '')
                 .order('created_at', { ascending: false });
 
             const feed = document.getElementById('feedList');
             if (!posts || posts.length === 0) {
-                feed.innerHTML = `<p style="color:var(--text-muted); font-size:0.85rem;">No updates in this phase yet.</p>`;
+                feed.innerHTML = `<p style="color:var(--text-muted); font-size:0.95rem;">No updates in this phase yet.</p>`;
                 return;
             }
 
             feed.innerHTML = posts.map(p => `
                 <div class="card" style="padding:12px; margin-bottom:10px;">
-                    <div style="font-weight:bold; font-size:0.85rem; color:var(--accent-glow);">${p.user_name || 'Member'}</div>
-                    <div style="font-size:0.9rem; margin-top:4px;">${p.update_text}</div>
+                    <div style="font-weight:700; font-size:0.95rem; color:var(--accent-glow);">${p.user_name || 'Member'}</div>
+                    <div style="font-size:0.95rem; margin-top:8px;">${p.update_text}</div>
                 </div>
             `).join('');
         }
@@ -254,6 +512,7 @@
             location.reload();
         }
 
+        // Initialize app
         initApp();
     </script>
 </body>
