@@ -23,7 +23,7 @@
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; }
         body { background-color: var(--bg-main); color: var(--text-main); min-height: 100vh; padding-bottom: 90px; }
 
-        header { background: var(--bg-card); border-bottom: 1px solid var(--border); padding: 18px 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: var(--shadow-soft); }
+        header { background: var(--bg-card); border-bottom: 1px solid var(--border); padding: 18px 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 12px rgba(2,6,23,0.4); }
         .logo { font-weight: 700; font-size: 1.25rem; color: var(--accent-glow); display:flex; align-items:center; gap:8px; }
 
         main { padding: 20px; max-width: 760px; margin: 20px auto; }
@@ -32,10 +32,10 @@
         .muted { color: var(--text-muted); }
 
         /* Inputs & buttons */
-        .form-control { width: 100%; padding: 14px; border-radius: var(--radius-md); border: 1px solid var(--border); background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(0,0,0,0.02)); color: var(--text-main); margin-bottom: 12px; font-size: 0.95rem; }
+        .form-control { width: 100%; padding: 14px; border-radius: var(--radius-md); border: 1px solid var(--border); background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(0,0,0,0.02)); color: var(--text-main); }
         textarea.form-control { min-height: 88px; resize: vertical; }
 
-        .btn { display: inline-block; padding: 12px 16px; border-radius: 999px; background: linear-gradient(90deg, var(--accent-primary), var(--accent-glow)); color: white; font-weight: 700; border: none; cursor: pointer; box-shadow: 0 8px 24px rgba(99,102,241,0.12); }
+        .btn { display: inline-block; padding: 12px 16px; border-radius: 999px; background: linear-gradient(90deg, var(--accent-primary), var(--accent-glow)); color: white; font-weight: 700; border: none; cursor: pointer; }
         .btn.ghost { background: transparent; border: 1px solid var(--border); color: var(--text-main); }
 
         .nav-bar { position: fixed; bottom: 0; left: 0; right: 0; background: var(--bg-card); border-top: 1px solid var(--border); display: flex; justify-content: space-around; padding: 12px 0; }
@@ -44,8 +44,8 @@
         .nav-item i { font-size: 1.2rem; display: block; margin-bottom: 4px; }
 
         /* Modal / Onboarding */
-        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(2,6,23,0.7); z-index: 2000; display: flex; align-items: center; justify-content: center; padding: 20px; }
-        .modal-box { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 28px; width: 100%; max-width: 520px; box-shadow: var(--shadow-soft); transform: translateY(0); transition: transform .28s ease, opacity .28s ease; }
+        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(2,6,23,0.7); z-index: 2000; display: flex; align-items: center; justify-content: center; padding: 24px; }
+        .modal-box { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 28px; width: 100%; max-width: 520px; box-shadow: var(--shadow-soft); transform: none; }
 
         .onboard-header { margin-bottom: 8px; }
         .onboard-title { font-size: 1.35rem; color: var(--accent-glow); font-weight: 800; margin-bottom: 6px; }
@@ -66,6 +66,59 @@
             main { padding: 14px; margin: 12px; }
             .modal-box { padding: 18px; }
         }
+
+        /* --- Mobile fixes: make modal and page scrollable and respect safe-area --- */
+        /* اجعل المسافة السفلية تأخذ بالحسبان safe-area (شاشات iOS/Android الحديثة) */
+        body {
+          /* keep previous values but ensure safe-area accounted for */
+          padding-bottom: calc(90px + env(safe-area-inset-bottom));
+        }
+
+        /* تأكد أن شريط التنقل أسفل يأخذ safe-area ويظل مرئي */
+        .nav-bar {
+          position: fixed;
+          bottom: 0;
+          left: 0;
+          right: 0;
+          background: var(--bg-card);
+          border-top: 1px solid var(--border);
+          display: flex;
+          justify-content: space-around;
+          padding: 12px 12px;
+          padding-bottom: calc(12px + env(safe-area-inset-bottom));
+          z-index: 50;
+        }
+
+        /* اجعل المودال قابلًا للتمرير عند امتلاءه على شاشات صغيرة */
+        .modal-overlay {
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: rgba(2,6,23,0.7);
+          z-index: 2000;
+          display: flex;
+          align-items: flex-start; /* start at top so it can scroll */
+          justify-content: center;
+          padding: 24px 12px;
+          overflow-y: auto; /* important: allow scrolling if content taller than viewport */
+        }
+
+        .modal-box {
+          background: var(--bg-card);
+          border: 1px solid var(--border);
+          border-radius: var(--radius-lg);
+          padding: 28px;
+          width: 100%;
+          max-width: 520px;
+          box-shadow: var(--shadow-soft);
+          transform: none;
+          /* cap modal height and allow internal scroll */
+          max-height: calc(100vh - 48px);
+          overflow-y: auto;
+        }
+
     </style>
 </head>
 <body>
@@ -223,7 +276,7 @@
 
     <script>
         const SUPABASE_URL = "https://liovctvovsyyzcwfjhob.supabase.co";
-        const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxpb3ZjdHZvdnN5eXpjd2ZqaG9iIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU0NjYyMzQsImV4cCI6MjEwMTA0MjIzNH0.wK8kl[...]";
+        const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxpb3ZjdHZvdnN5eXpjd2ZqaG9iIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU0NjYyMzQsImV4cCI6MjEwMTA0MjIzNH0.[REDACTED]";
         const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         let currentUser = null;
